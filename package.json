@@ -4,7 +4,7 @@
   "description": "api for grocery store management system",
   "main": "index.js",
   "scripts": {
-    "start": "node --exec ts-node src/index.ts"
+    "start": "ts-node src/index.ts"
   },
   "author": "tesfaye lemi",
   "license": "ISC",
