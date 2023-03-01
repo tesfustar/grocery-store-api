@@ -4,7 +4,7 @@
   "description": "api for grocery store management system",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node --exec ts-node src/index.ts"
   },
   "author": "tesfaye lemi",
   "license": "ISC",
@@ -16,5 +16,8 @@
     "express": "^4.18.2",
     "mongoose": "^7.0.0",
     "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
   }
 }
