@@ -6,6 +6,7 @@ interface productSchema {
   nameAm: string;
   image: Array<string>;
   description: string;
+  descriptionAm: string;
   wholeSalePrice: number;
   availableQuantity: number;
   hasSpecialOffer: boolean;
@@ -13,10 +14,11 @@ interface productSchema {
 const productSchema = new mongoose.Schema<productSchema>(
   {
     category: { type: mongoose.SchemaTypes.ObjectId, ref: "Category" },
-    name: { type: String },
-    nameAm: { type: String },
+    name: { type: String , unique: true },
+    nameAm: { type: String, unique: true  },
     image: { type: [String] },
     description: { type: String },
+    descriptionAm: { type: String },
     wholeSalePrice: { type: Number },
     availableQuantity: { type: Number },
     hasSpecialOffer: { type: Boolean, default: false },

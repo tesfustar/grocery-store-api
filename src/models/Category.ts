@@ -7,8 +7,8 @@ interface categorySchema {
 }
 const categorySchema = new mongoose.Schema<categorySchema>(
   {
-    name: { type: String },
-    nameAm: { type: String },
+    name: { type: String, unique: true  },
+    nameAm: { type: String, unique: true  },
     image: { type: String },
   },
   { timestamps: true }

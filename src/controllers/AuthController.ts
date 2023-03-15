@@ -34,7 +34,11 @@ export const SignUp = async (req: Request, res: Response) => {
     });
     if (emailExist)
       return res.status(400).json({ message: "email already taken" });
-
+    //check if the user try to register before
+    const unVerifiedUserExist = await User.findOne({
+      phone: userData.phone,
+      isRegistered: false,
+    });
     var config = {
       method: "get",
       url: `https://api.geezsms.com/api/v1/sms/otp?token=${process.env.GEEZ_SMS_TOKEN}&phone=${req.body.phone}`,
@@ -49,11 +53,21 @@ export const SignUp = async (req: Request, res: Response) => {
             JSON.stringify(response.data?.code),
             salt
           );
+
           await Otp.create({
             phone: userData.phone,
             code: hashedOtp,
           });
-          await User.create({ ...userData, password: hashedPassword });
+          //crete user if the phone number not exist or update the user info
+          if (unVerifiedUserExist) {
+            await User.findByIdAndUpdate(
+              unVerifiedUserExist._id,
+              { $set: { ...userData, password: hashedPassword } },
+              { new: true }
+            );
+          } else {
+            await User.create({ ...userData, password: hashedPassword });
+          }
           res.status(200).json({
             message: "OTP sent to your phone",
             // code: JSON.stringify(response.data?.code),
@@ -93,6 +107,8 @@ export const VerifyOtp = async (req: Request, res: Response) => {
     //check if the otp exist and compare with user otp
     if (!userOtp) return res.status(403).json({ message: "Invalid gateway" });
     const isOtpCorrect = await bcrypt.compare(otpData.code, userOtp.code);
+    if (!isOtpCorrect)
+      return res.status(400).json({ message: "Invalid Otp code" });
     //then find the user and register it
     let user = await User.findOne({
       phone: otpData.phone,

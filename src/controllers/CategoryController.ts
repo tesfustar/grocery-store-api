@@ -19,7 +19,7 @@ export const CreateCategory = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
