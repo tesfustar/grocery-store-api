@@ -11,7 +11,7 @@ export const SignUp = async (req: Request, res: Response) => {
   try {
     const userSchema = z.object({
       phone: z.number(),
-      email: z.string(),
+      email: z.string().email(),
       password: z.string().min(6),
       firstName: z.string(),
       lastName: z.string(),

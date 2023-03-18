@@ -19,7 +19,6 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
     phoneNo: { type: String },
-    name: { type: String, required: true },
     products: [
       {
         product: { type: mongoose.SchemaTypes.ObjectId, ref: "Product" },
@@ -28,7 +27,7 @@ const OrderSchema = new mongoose.Schema<OrderSchema>(
     ],
     amount: { type: Number, required: true },
     address: { type: String, required: true },
-    status: { type: String, default: "pending" },
+    status: { type: String, default: "PENDING" },
   },
   { timestamps: true }
 );
