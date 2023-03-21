@@ -5,6 +5,7 @@ import mongoDbConnection from "./config/db.config";
 import auth from "./routes/auth";
 import category from "./routes/category";
 import product from "./routes/product";
+import admin from "./routes/admin";
 const app: Application = express();
 
 //default middleware
@@ -23,6 +24,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/auth", auth);
 app.use("/api/category", category);
 app.use("/api/product", product);
+app.use("/api/admin", admin);
 // Start the server
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));

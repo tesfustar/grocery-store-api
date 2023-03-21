@@ -1,5 +1,5 @@
 import mongoose, { ObjectId } from "mongoose";
-
+import paginate from "mongoose-paginate-v2";
 interface productSchema {
   category: ObjectId;
   name: string;
@@ -13,7 +13,7 @@ interface productSchema {
 }
 const productSchema = new mongoose.Schema<productSchema>(
   {
-    category: { type: mongoose.SchemaTypes.ObjectId, ref: "Category" },
+    category: { type: mongoose.SchemaTypes.ObjectId, ref: "Category"},
     name: { type: String , unique: true },
     nameAm: { type: String, unique: true  },
     image: { type: [String] },
@@ -26,6 +26,7 @@ const productSchema = new mongoose.Schema<productSchema>(
   { timestamps: true }
 );
 
+productSchema.plugin(paginate)
 const Product = mongoose.model<productSchema>("Product", productSchema);
 
 export default Product;
