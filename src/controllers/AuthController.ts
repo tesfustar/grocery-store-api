@@ -11,29 +11,17 @@ export const SignUp = async (req: Request, res: Response) => {
   try {
     const userSchema = z.object({
       phone: z.number(),
-      email: z.string().email(),
-      password: z.string().min(6),
-      firstName: z.string(),
-      lastName: z.string(),
-      location: z.string().optional(),
-      address: z.string(),
     });
     const userData = userSchema.parse(req.body);
     //check if user already exist
 
     const userExist = await User.findOne({
       phone: userData.phone,
+      otpVerified: true,
       isRegistered: true,
     });
     if (userExist)
       return res.status(400).json({ message: "user already exist!" });
-    // //check if email taken
-    const emailExist = await User.findOne({
-      email: userData.email,
-      isRegistered: true,
-    });
-    if (emailExist)
-      return res.status(400).json({ message: "email already taken" });
     //check if the user try to register before
     const unVerifiedUserExist = await User.findOne({
       phone: userData.phone,
@@ -48,7 +36,6 @@ export const SignUp = async (req: Request, res: Response) => {
       .then(async function (response) {
         try {
           const salt = await bcrypt.genSalt(10);
-          const hashedPassword = await bcrypt.hash(userData.password, salt);
           const hashedOtp = await bcrypt.hash(
             JSON.stringify(response.data?.code),
             salt
@@ -58,19 +45,9 @@ export const SignUp = async (req: Request, res: Response) => {
             phone: userData.phone,
             code: hashedOtp,
           });
-          //crete user if the phone number not exist or update the user info
-          if (unVerifiedUserExist) {
-            await User.findByIdAndUpdate(
-              unVerifiedUserExist._id,
-              { $set: { ...userData, password: hashedPassword } },
-              { new: true }
-            );
-          } else {
-            await User.create({ ...userData, password: hashedPassword });
-          }
+          //send otp code
           res.status(200).json({
             message: "OTP sent to your phone",
-            // code: JSON.stringify(response.data?.code),
           });
         } catch (error) {
           res.status(400).json({ error: `error ${error}` });
@@ -88,7 +65,7 @@ export const SignUp = async (req: Request, res: Response) => {
   }
 };
 
-//verify otp for finish registration
+//verify otp
 export const VerifyOtp = async (req: Request, res: Response) => {
   try {
     const otpSchema = z.object({
@@ -109,29 +86,29 @@ export const VerifyOtp = async (req: Request, res: Response) => {
     const isOtpCorrect = await bcrypt.compare(otpData.code, userOtp.code);
     if (!isOtpCorrect)
       return res.status(400).json({ message: "Invalid Otp code" });
-    //then find the user and register it
-    let user = await User.findOne({
+
+    let oldPhone = await User.findOne({
       phone: otpData.phone,
+      otpVerified: true,
       isRegistered: false,
     });
-    // if the user does not exist is is invalid gate way
-    if (!user) return res.status(403).json({ message: "Invalid gateway" });
-    //update the user and the otp
-    await Otp.findByIdAndUpdate(userOtp._id, { isUsed: true }, { new: true });
-    const updateUser = await User.findByIdAndUpdate(
-      user._id,
-      { isRegistered: true },
-      { new: true }
-    ).populate("role");
-    // the generate the token
-    const token = jwt.sign(
-      { phone: user.phone },
-      process.env.JWT_KEY as Secret,
-      {
-        expiresIn: "2d",
-      }
-    );
-    res.status(200).json({ message: "success", user: updateUser, token });
+    if (!oldPhone) {
+      const newUser = await User.create({
+        phone: req.body.phone,
+        otpVerified: true,
+      });
+      await Otp.findByIdAndUpdate(userOtp._id, { isUsed: true }, { new: true });
+      res.status(200).json({
+        message: "successfully verified",
+        data: newUser._id,
+      });
+    } else {
+      await Otp.findByIdAndUpdate(userOtp._id, { isUsed: true }, { new: true });
+      res.status(200).json({
+        message: "successfully verified",
+        data: oldPhone._id,
+      });
+    }
   } catch (error) {
     if (error instanceof z.ZodError)
       return res
@@ -141,6 +118,68 @@ export const VerifyOtp = async (req: Request, res: Response) => {
   }
 };
 
+//finish register
+// //register user with full information
+export const RegisterUser = async (req: Request, res: Response) => {
+  try {
+    const userSchema = z.object({
+      phone: z.number(),
+      email: z.string().email(),
+      password: z.string().min(6),
+      firstName: z.string(),
+      lastName: z.string(),
+      location: z.number().optional(),
+      address: z.string().array(),
+    });
+    const userData = userSchema.parse(req.body);
+    const oldUser = await User.findOne({
+      phone: userData.phone,
+      otpVerified: true,
+    });
+    if (!oldUser)
+      return res.status(400).json({ message: "you are not verified user!" });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(userData.password, salt);
+    const address: any = await axios
+      .get(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${userData.address[1]},${userData.address[0]}&key=${process.env.GOOGLE_MAP_API_KEY}`
+        // `https://maps.googleapis.com/maps/api/geocode/json?latlng=38.76486078990507,8.995699507506966&key=AIzaSyDd81MpJcxjNdICQeKRg3Emywp4e_29Sfc`
+      )
+      .then(async (response) => {
+        const address =
+          response.data.results[0].address_components[2].long_name;
+        // console.log(address)
+        const registeredUser = await User.findByIdAndUpdate(
+          oldUser.id,
+          {
+            $set: {
+              ...userData,
+              password: hashedPassword,
+              isRegistered: true,
+              address:
+                response.data.results[0]?.address_components[2]?.long_name,
+            },
+          },
+          { new: true }
+        );
+        const token = jwt.sign(
+          { phone: registeredUser?.phone, isAdmin: registeredUser?.role },
+          process.env.JWT_KEY as Secret,
+          {
+            expiresIn: "24h",
+          }
+        );
+        res.status(201).json({ result: registeredUser, token });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong please try later!", error });
+  }
+};
 //sign in for customers only
 export const SignInForCustomer = async (req: Request, res: Response) => {
   try {
@@ -204,7 +243,7 @@ export const SignInForDelivery = async (req: Request, res: Response) => {
     if (!isPasswordCorrect)
       return res.status(403).json({ message: "Invalid password" });
     //check if the user is delivery
-    if (oldUser.role !== "Delivery")
+    if (oldUser.role !== "DELIVERY")
       return res
         .status(403)
         .json({ message: "You are not authorized to use this app!" });

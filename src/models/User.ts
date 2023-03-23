@@ -12,12 +12,12 @@ interface User {
   lastName: string;
   profile?: string;
   location?: string;
-  address?: string;
+  address: Number[];
   otpVerified: boolean;
   isRegistered: boolean;
-  role:string;
+  role:"USER" | "DELIVERY";
 }
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema<User>(
   {
     phone: { type: Number, unique: true },
     firstName: { type: String },
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
         "https://t3.ftcdn.net/jpg/03/46/83/96/240_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg",
     },
     location: { type: [Number] },
-    address: { type: String },
+    address: { type: [Number] },
     otpVerified: { type: Boolean, default: false },
     isRegistered: { type: Boolean, default: false },
     role: { type: String, default:"USER" },
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model<User>("User", userSchema);
 
 export default User;
 

@@ -2,6 +2,7 @@ import express, { Router } from "express";
 import {
   SignUp,
   VerifyOtp,
+  RegisterUser,
   SignInForCustomer,
   SignInForDelivery,
   ForgotPassword,
@@ -13,6 +14,7 @@ const router: Router = express.Router();
 
 router.post("/sign-up", SignUp);
 router.post("/sign-up/verify-otp", VerifyOtp);
+router.post("/sign-up/finish-register", RegisterUser); //finish user registration
 router.post("/sign-in", SignInForCustomer);
 router.post("/delivery/sign-in", SignInForDelivery); //sign in for delivery man
 router.post("/forgot-password", ForgotPassword);
