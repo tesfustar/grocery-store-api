@@ -1,17 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
 import paginate from "mongoose-paginate-v2";
-interface productSchema {
-  category: ObjectId;
-  name: string;
-  nameAm: string;
-  image: Array<string>;
-  description: string;
-  descriptionAm: string;
-  wholeSalePrice: number;
-  availableQuantity: number;
-  hasSpecialOffer: boolean;
-}
-const productSchema = new mongoose.Schema<productSchema>(
+import { IProduct } from "../types/Product";
+const productSchema = new mongoose.Schema<IProduct>(
   {
     category: { type: mongoose.SchemaTypes.ObjectId, ref: "Category"},
     name: { type: String , unique: true },
@@ -27,6 +17,6 @@ const productSchema = new mongoose.Schema<productSchema>(
 );
 
 productSchema.plugin(paginate)
-const Product = mongoose.model<productSchema>("Product", productSchema);
+const Product = mongoose.model<IProduct>("Product", productSchema);
 
 export default Product;

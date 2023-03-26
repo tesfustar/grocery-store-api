@@ -1,19 +1,15 @@
 import mongoose from "mongoose";
+import { ICategory } from "../types/Category";
 
-interface categorySchema {
-  name: string;
-  nameAm: string;
-  image: string;
-}
-const categorySchema = new mongoose.Schema<categorySchema>(
+const categorySchema = new mongoose.Schema<ICategory>(
   {
-    name: { type: String, unique: true  },
-    nameAm: { type: String, unique: true  },
+    name: { type: String, unique: true },
+    nameAm: { type: String, unique: true },
     image: { type: String },
   },
   { timestamps: true }
 );
 
-const Category = mongoose.model<categorySchema>("Category", categorySchema);
+const Category = mongoose.model<ICategory>("Category", categorySchema);
 
 export default Category;

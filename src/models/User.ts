@@ -1,23 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
+import { IUser } from "../types/User";
 
-interface Role {
-  _id: ObjectId;
-  name: string;
-}
-interface User {
-  phone: number;
-  email?: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  profile?: string;
-  location?: string;
-  address: Number[];
-  otpVerified: boolean;
-  isRegistered: boolean;
-  role:"USER" | "DELIVERY";
-}
-const userSchema = new mongoose.Schema<User>(
+const userSchema = new mongoose.Schema<IUser>(
   {
     phone: { type: Number, unique: true },
     firstName: { type: String },
@@ -38,7 +22,7 @@ const userSchema = new mongoose.Schema<User>(
   { timestamps: true }
 );
 
-const User = mongoose.model<User>("User", userSchema);
+const User = mongoose.model<IUser>("User", userSchema);
 
 export default User;
 

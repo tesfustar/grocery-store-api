@@ -1,13 +1,8 @@
 import mongoose, { ObjectId } from "mongoose";
+import { INotification } from "../types/Notification";
 // import paginate from "mongoose-paginate-v2";
 
-interface NotificationSchema {
-  user: ObjectId;
-  title: string;
-  message: string;
-  readAt: Date;
-}
-const notificationSchema = new mongoose.Schema<NotificationSchema>(
+const notificationSchema = new mongoose.Schema<INotification>(
   {
     user: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -21,7 +16,7 @@ const notificationSchema = new mongoose.Schema<NotificationSchema>(
   { timestamps: true }
 );
 // notificationSchema.plugin(paginate);
-const Notification = mongoose.model<NotificationSchema>(
+const Notification = mongoose.model<INotification>(
   "Notification",
   notificationSchema
 );

@@ -1,10 +1,7 @@
 import mongoose, { ObjectId } from "mongoose";
+import { IFavorite } from "../types/Favorite";
 
-interface FavoriteSchema {
-  user: ObjectId;
-  products: Array<ObjectId>;
-}
-const favoriteSchema = new mongoose.Schema<FavoriteSchema>(
+const favoriteSchema = new mongoose.Schema<IFavorite>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
     products: [{ type: mongoose.SchemaTypes.ObjectId, ref: "Product" }],
@@ -12,6 +9,6 @@ const favoriteSchema = new mongoose.Schema<FavoriteSchema>(
   { timestamps: true }
 );
 
-const Favorite = mongoose.model<FavoriteSchema>("Favorite", favoriteSchema);
+const Favorite = mongoose.model<IFavorite>("Favorite", favoriteSchema);
 
 export default Favorite;

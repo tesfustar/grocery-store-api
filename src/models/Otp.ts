@@ -1,12 +1,7 @@
 import mongoose from "mongoose";
+import { IOtp } from "../types/Otp";
 
-interface OtpSchema {
-  phone: number;
-  code: string;
-  isUsed: boolean;
-  isForForget: boolean;
-}
-const otpSchema = new mongoose.Schema<OtpSchema>(
+const otpSchema = new mongoose.Schema<IOtp>(
   {
     phone: { type: Number },
     code: { type: String },
@@ -16,6 +11,6 @@ const otpSchema = new mongoose.Schema<OtpSchema>(
   { timestamps: true }
 );
 
-const Otp = mongoose.model<OtpSchema>("Otp", otpSchema);
+const Otp = mongoose.model<IOtp>("Otp", otpSchema);
 
 export default Otp;
