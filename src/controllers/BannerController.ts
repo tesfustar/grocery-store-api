@@ -6,7 +6,7 @@ export const CreateBanner = async (req: Request, res: Response) => {
   try {
     const bannerSchema = z.object({
       name: z.string(),
-      products: z.string().array(),
+      products: z.string().array().optional(),
       image: z.string(),
     });
     //first validate the user request before create
