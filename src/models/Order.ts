@@ -1,9 +1,6 @@
 import mongoose, { ObjectId } from "mongoose";
 import { IOrder } from "../types/Order";
 
-
-
-
 const OrderSchema = new mongoose.Schema<IOrder>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
@@ -15,7 +12,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       },
     ],
     amount: { type: Number, required: true },
-    address: { type: String, required: true },
+    address: { type: [Number], required: true },
     status: { type: String, default: "PENDING" },
   },
   { timestamps: true }
