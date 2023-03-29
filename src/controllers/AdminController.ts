@@ -4,6 +4,7 @@ import Product from "../models/Product";
 import Category from "../models/Category";
 import order from "../models/Order";
 import { z } from "zod";
+import Branch from "../models/Branch";
 //for dashboard view
 export const GetAllCountInfo = async (req: Request, res: Response) => {
   try {
@@ -11,6 +12,7 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
     const getAllDelIveries = await User.find({ role: "DELIVERY" }).count();
     const getAllProducts = await Product.find().count();
     const getAllCategories = await Category.find().count();
+    const getAllBranches = await Branch.find().count();
     const getAllOrders = await order.find().count();
     res.status(200).json({
       message: "success",
@@ -19,6 +21,7 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
         deliveries: getAllDelIveries,
         products: getAllProducts,
         categories: getAllCategories,
+        branchs:getAllBranches,
         orders: getAllOrders,
       },
     });

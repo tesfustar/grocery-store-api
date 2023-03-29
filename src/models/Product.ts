@@ -10,7 +10,6 @@ const productSchema = new mongoose.Schema<IProduct>(
     description: { type: String },
     descriptionAm: { type: String },
     wholeSalePrice: { type: Number },
-    availableQuantity: { type: Number },
     hasSpecialOffer: { type: Boolean, default: false },
   },
   { timestamps: true }

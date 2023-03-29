@@ -7,6 +7,5 @@ export interface IProduct {
   description: string;
   descriptionAm: string;
   wholeSalePrice: number;
-  availableQuantity: number;
   hasSpecialOffer: boolean;
 }
