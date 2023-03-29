@@ -6,7 +6,7 @@ import {
   GetProducts,
   GetProductsForCustomers,
   GetProductsByCategory,
-  GetProductsBySearch
+  GetProductsBySearch,
 } from "../controllers/ProductController";
 
 const router: Router = express.Router();
