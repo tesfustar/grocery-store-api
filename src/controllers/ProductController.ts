@@ -1,6 +1,7 @@
 import Product from "../models/Product";
 import { Request, Response } from "express";
 import { z } from "zod";
+import Category from "../models/Category";
 //create new product
 
 export const CreateNewProduct = async (req: Request, res: Response) => {
@@ -17,7 +18,10 @@ export const CreateNewProduct = async (req: Request, res: Response) => {
       hasSpecialOffer: z.boolean().optional(),
     });
     const productData = productSchema.parse(req.body);
-
+    //validate the category is exist
+    const category = await Category.findById(req.body.category);
+    if (!category)
+      return res.status(400).json({ message: "category does not exist!" });
     const createProduct = await Product.create(productData);
     res
       .status(201)
@@ -27,7 +31,7 @@ export const CreateNewProduct = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message:`Internal server error ${error}` });
+    res.status(500).json({ message: `Internal server error ${error}` });
   }
 };
 
@@ -105,15 +109,30 @@ export const GetProductsForCustomers = async (req: Request, res: Response) => {
   }
 };
 
-
 //get products by category for customer no auth required
 
 export const GetProductsByCategory = async (req: Request, res: Response) => {
-  const {cat} = req.query;
+  const { cat } = req.query;
   try {
-    const products = await Product.find({category:cat});
+    const products = await Product.find({ category: cat });
     res.status(200).json({ message: "success", data: products });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//search products
+export const GetProductsBySearch = async (req: Request, res: Response) => {
+  const query = req.query.q as string;
+  try {
+    const products = await Product.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ],
+    });
+    res.status(200).json({ message: "success", data: products });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
