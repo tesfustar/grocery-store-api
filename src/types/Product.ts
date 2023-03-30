@@ -8,4 +8,6 @@ export interface IProduct {
   descriptionAm: string;
   wholeSalePrice: number;
   hasSpecialOffer: boolean;
+  isTodaysPick:boolean;
+  view:number
 }

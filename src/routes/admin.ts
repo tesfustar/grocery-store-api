@@ -3,14 +3,15 @@ import {
   GetAllCustomers,
   GetAllCountInfo,
   GetAllDeliveries,
-  CreateDeliveryMan
+  CreateDeliveryMan,
+  CreateBranchAdminMan,
 } from "../controllers/AdminController";
 
 const router: Router = express.Router();
 
-
-router.get("/dashboard", GetAllCountInfo); //for admin
-router.get("/customers", GetAllCustomers); //for admin
-router.get("/deliveries", GetAllDeliveries); //for admin
-router.post("/delivery/create", CreateDeliveryMan); //for admin
+router.get("/dashboard", GetAllCountInfo); //for super admin
+router.get("/customers", GetAllCustomers); //for super admin
+router.get("/deliveries", GetAllDeliveries); //for super admin
+router.post("/delivery/create", CreateDeliveryMan); //for super admin
+router.post("/branch-manager/create", CreateBranchAdminMan); //for super admin
 export default router;

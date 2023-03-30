@@ -1,5 +1,5 @@
 import mongoose, { ObjectId } from "mongoose";
-import { IUser } from "../types/User";
+import { IUser, UserRole } from "../types/User";
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -14,10 +14,11 @@ const userSchema = new mongoose.Schema<IUser>(
         "https://t3.ftcdn.net/jpg/03/46/83/96/240_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg",
     },
     location: { type: [Number] },
-    address: { type: [Number] },
+    address: { type: String },
     otpVerified: { type: Boolean, default: false },
     isRegistered: { type: Boolean, default: false },
-    role: { type: String, default:"USER" },
+    role: { type: String, default: UserRole.USER, enum: Object.keys(UserRole) },
+    branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch",default:null}
   },
   { timestamps: true }
 );
@@ -25,6 +26,5 @@ const userSchema = new mongoose.Schema<IUser>(
 const User = mongoose.model<IUser>("User", userSchema);
 
 export default User;
-
 
 // role: { type: mongoose.SchemaTypes.ObjectId, ref: "Role", default: {name:"USER"} },

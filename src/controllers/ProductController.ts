@@ -2,6 +2,7 @@ import Product from "../models/Product";
 import { Request, Response } from "express";
 import { z } from "zod";
 import Category from "../models/Category";
+import mongoose, { ObjectId } from "mongoose";
 //create new product
 
 export const CreateNewProduct = async (req: Request, res: Response) => {
@@ -131,6 +132,60 @@ export const GetProductsBySearch = async (req: Request, res: Response) => {
       ],
     });
     res.status(200).json({ message: "success", data: products });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get single product detail
+export const GetSingleProduct = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const productId = new mongoose.Types.ObjectId(id); // convert id to ObjectId
+    const product = await Product.findById(id).populate("category");
+    if (!product)
+      return res.status(404).json({ message: "product  not found!" });
+    //increase view
+    product.view++;
+    //  find related products on the same product
+    const products = await Product.find({ category: product.category });
+    const randomizeProducts = products
+      .filter((product) => product._id == productId)
+      .map((value) => ({ value, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ value }) => value);
+
+    //then save the product to increase the view count
+    const savedProduct = await product.save();
+    res.status(200).json({
+      message: "success",
+      product: savedProduct,
+      relatedProducts: randomizeProducts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get mostly viewed products
+
+export const GetMostlyViewedProducts = async (req: Request, res: Response) => {
+  try {
+    const mostlyViewedProducts = await Product.find()
+      .populate("category")
+      .sort({ view: -1 });
+    res.status(200).json({ success: true, data: mostlyViewedProducts });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get today pick products
+export const GetTodaysPickProducts = async (req: Request, res: Response) => {
+  try {
+    const todayDealProducts = await Product.find({isTodaysPick:true})
+      .populate("category")
+    res.status(200).json({ success: true, data: todayDealProducts });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }

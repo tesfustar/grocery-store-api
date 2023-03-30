@@ -21,7 +21,7 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
         deliveries: getAllDelIveries,
         products: getAllProducts,
         categories: getAllCategories,
-        branchs:getAllBranches,
+        branchs: getAllBranches,
         orders: getAllOrders,
       },
     });
@@ -50,7 +50,7 @@ export const GetAllDeliveries = async (req: Request, res: Response) => {
   }
 };
 
-//create delivery man by default
+//create account for delivery man by default (with out phone verification)
 
 export const CreateDeliveryMan = async (req: Request, res: Response) => {
   try {
@@ -60,12 +60,72 @@ export const CreateDeliveryMan = async (req: Request, res: Response) => {
       password: z.string().min(6),
       firstName: z.string(),
       lastName: z.string(),
-      location: z.number().optional(),
-      address: z.string().array(),
+      location: z.number().array().optional(),
+      address: z.string(),
+      role: z.string(),
     });
     const deliveryData = deliverySchema.parse(req.body);
-    const createDeliveryMan = await User.create(deliveryData);
+    //check if the phone number of email is already taken
+    const phoneExist = await User.findOne({
+      phone: deliveryData.phone,
+      otpVerified: true,
+      isRegistered: true,
+    });
+    if (phoneExist)
+      return res.status(400).json({ message: "user already exist!" });
+    const emailExist = await User.findOne({
+      email: deliveryData.email,
+      otpVerified: true,
+      isRegistered: true,
+    });
+    if (emailExist)
+      return res.status(400).json({ message: "emailExist already exist!" });
+    const createDeliveryMan = await User.create({...deliveryData,otpVerified:true,isRegistered:true});
     res.status(201).json({ message: "success", data: createDeliveryMan });
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: error.errors });
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//create account for branch manager admin man and assign branch to it (with out phone verification)
+
+export const CreateBranchAdminMan = async (req: Request, res: Response) => {
+  try {
+    const branchManagerSchema = z.object({
+      phone: z.number(),
+      email: z.string().email(),
+      password: z.string().min(6),
+      firstName: z.string(),
+      lastName: z.string(),
+      location: z.number().array().optional(),
+      address: z.string(),
+      role: z.string(),
+      branch: z.string(),
+    });
+    const branchData = branchManagerSchema.parse(req.body);
+    //check if the phone number of email is already taken
+    const phoneExist = await User.findOne({
+      phone: branchData.phone,
+      otpVerified: true,
+      isRegistered: true,
+    });
+    if (phoneExist)
+      return res.status(400).json({ message: "user already exist!" });
+    const emailExist = await User.findOne({
+      email: branchData.email,
+      otpVerified: true,
+      isRegistered: true,
+    });
+    if (emailExist)
+      return res.status(400).json({ message: "emailExist already exist!" });
+    const createBranchManagerAdmin = await User.create({...branchData,otpVerified:true,isRegistered:true});
+    res
+      .status(201)
+      .json({ message: "success", data: createBranchManagerAdmin });
   } catch (error) {
     if (error instanceof z.ZodError)
       return res

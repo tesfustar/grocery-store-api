@@ -1,7 +1,9 @@
-enum UserRole {
+import { ObjectId } from "mongoose";
+export enum UserRole {
   USER = "USER",
   DELIVERY = "DELIVERY",
   ADMIN = "ADMIN",
+  STORE_ADMIN = "STORE_ADMIN",
 }
 
 export interface IUser {
@@ -11,15 +13,11 @@ export interface IUser {
   firstName: string;
   lastName: string;
   profile?: string;
-  location?: string;
-  address: Number[];
+  address?: string;
+  location?: Number[];
   otpVerified: boolean;
   isRegistered: boolean;
-  role:"USER" | "DELIVERY" | "ADMIN";
-  // role: UserRole;
+  // role:"USER" | "DELIVERY" | "ADMIN";
+  role: UserRole;
+  branch: ObjectId | null;
 }
-
-//   interface Role {
-//     _id: ObjectId;
-//     name: string;
-//   }
