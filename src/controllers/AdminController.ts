@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import Product from "../models/Product";
 import Category from "../models/Category";
 import order from "../models/Order";
+import bcrypt from "bcryptjs";
 import { z } from "zod";
 import Branch from "../models/Branch";
 //for dashboard view
@@ -80,7 +81,10 @@ export const CreateDeliveryMan = async (req: Request, res: Response) => {
     });
     if (emailExist)
       return res.status(400).json({ message: "emailExist already exist!" });
-    const createDeliveryMan = await User.create({...deliveryData,otpVerified:true,isRegistered:true});
+      //hash the password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(deliveryData.password, salt);
+    const createDeliveryMan = await User.create({...deliveryData,password:hashedPassword,otpVerified:true,isRegistered:true});
     res.status(201).json({ message: "success", data: createDeliveryMan });
   } catch (error) {
     if (error instanceof z.ZodError)
@@ -122,7 +126,9 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
     });
     if (emailExist)
       return res.status(400).json({ message: "emailExist already exist!" });
-    const createBranchManagerAdmin = await User.create({...branchData,otpVerified:true,isRegistered:true});
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(branchData.password, salt);
+    const createBranchManagerAdmin = await User.create({...branchData,password:hashedPassword,otpVerified:true,isRegistered:true});
     res
       .status(201)
       .json({ message: "success", data: createBranchManagerAdmin });
