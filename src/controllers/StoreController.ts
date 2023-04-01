@@ -9,7 +9,7 @@ export const CreateStore = async (req: Request, res: Response) => {
     const storeSchema = z.object({
       product: z.string(),
       branch: z.string(),
-      availableQuantity: z.number().array(),
+      availableQuantity: z.number()
     });
     //user input validation
     const storeData = storeSchema.parse(req.body);

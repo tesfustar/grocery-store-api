@@ -11,6 +11,7 @@ import admin from "./routes/admin";
 import banner from "./routes/banner";
 import branch from "./routes/branch";
 import store from "./routes/store";
+import branchAdmin from "./routes/branchAdmin";
 const app: Application = express();
 
 //default middleware
@@ -33,6 +34,7 @@ app.use("/api/admin", admin);
 app.use("/api/banner", banner);
 app.use("/api/branch", branch);
 app.use("/api/store", store);
+app.use("/api/branch-admin", branchAdmin);
 // Start the server
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));
