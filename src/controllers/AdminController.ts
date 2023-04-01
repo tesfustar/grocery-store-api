@@ -22,7 +22,7 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
         deliveries: getAllDelIveries,
         products: getAllProducts,
         categories: getAllCategories,
-        branchs: getAllBranches,
+        branches: getAllBranches,
         orders: getAllOrders,
       },
     });
@@ -41,6 +41,16 @@ export const GetAllCustomers = async (req: Request, res: Response) => {
   }
 };
 
+
+//get all branch admins
+export const GetAllBranchAdmin = async (req: Request, res: Response) => {
+  try {
+    const getBranchAdmins = await User.find({ role: "STORE_ADMIN" }).populate("branch");
+    res.status(201).json({ message: "success", data: getBranchAdmins });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
 //get all orders
 export const GetAllDeliveries = async (req: Request, res: Response) => {
   try {
