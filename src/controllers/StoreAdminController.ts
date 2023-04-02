@@ -20,7 +20,7 @@ export const StoreAdminDashboard = async (req: Request, res: Response) =>{
 export const GetBranchProducts = async (req: Request, res: Response) =>{
     const {branchId} = req.params
     try {
-        const storeProducts = await Store.find({branch:branchId}).populate("product")
+        const storeProducts = await Store.find({branch:branchId}).populate("product").populate("category")
          res.status(200).json({message:"success",data:storeProducts})
     } catch (error) {
         res.status(500).json({ message: "Internal server error" + error });
