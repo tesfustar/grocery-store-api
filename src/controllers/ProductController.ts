@@ -67,7 +67,7 @@ export const DeleteProduct = async (req: Request, res: Response) => {
 
 export const GetProducts = async (req: Request, res: Response) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find().populate("category");
     res.status(200).json({ message: "success", data: products });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

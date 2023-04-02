@@ -10,7 +10,10 @@ export const CreateBranch = async (req: Request, res: Response) => {
     const branchSchema = z.object({
       name: z.string(),
       address: z.string(),
-      location: z.number().array(),
+      location: z.object({
+        type:z.string(),
+        coordinates:z.number().array()
+      }),
     });
     const branch = branchSchema.parse(req.body);
     const createBranch = await Branch.create(branch);

@@ -70,3 +70,14 @@ export const GetCategories = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+//get all category for the super admin
+export const GetCategoriesForAdmin = async (req: Request, res: Response) => {
+  try {
+    const categories = await Category.find();
+    res.status(200).json({ message: "success", data: categories });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
