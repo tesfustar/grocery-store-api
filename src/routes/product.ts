@@ -4,6 +4,7 @@ import {
   UpdateProduct,
   DeleteProduct,
   GetProducts,
+  GetProductsForBranches, 
   GetProductsForCustomers,
   GetProductsByCategory,
   GetProductsBySearch,
@@ -25,6 +26,7 @@ router.get("/todays-deal", GetTodaysPickProducts); //todays deal products for us
 router.get("/todays-deal/admin", GetTodaysPickProductsForAdmin); //todays deal products for super admin
 router.delete("/find/remove/:id", DeleteProduct);
 router.get("/admin", GetProducts); //for super admin admin
+router.get("/branches", GetProductsForBranches); //for branchs
 router.get("/user", GetProductsForCustomers); //for user not auth required
 router.get("/user/category", GetProductsByCategory); //for user not auth required
 router.get("/search", GetProductsBySearch); //for user not auth required

@@ -17,7 +17,6 @@ export interface IUser {
   location?: Number[];
   otpVerified: boolean;
   isRegistered: boolean;
-  // role:"USER" | "DELIVERY" | "ADMIN";
   role: UserRole;
   branch: ObjectId | null;
 }

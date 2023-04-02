@@ -9,17 +9,19 @@ import Branch from "../models/Branch";
 //for dashboard view
 export const GetAllCountInfo = async (req: Request, res: Response) => {
   try {
-    const getAllCustomers = await User.find({ role: "USER" }).count();
-    const getAllDelIveries = await User.find({ role: "DELIVERY" }).count();
-    const getAllProducts = await Product.find().count();
-    const getAllCategories = await Category.find().count();
-    const getAllBranches = await Branch.find().count();
-    const getAllOrders = await order.find().count();
+    const getAllCustomers = await User.countDocuments({ role: "USER" })
+    const getAllDelIveries = await User.countDocuments({ role: "DELIVERY" })
+    const getAllBranchAdmins = await User.countDocuments({ role: "STORE_ADMIN", branch: { $ne: null } });
+    const getAllProducts = await Product.countDocuments()
+    const getAllCategories = await Category.countDocuments()
+    const getAllBranches = await Branch.countDocuments()
+    const getAllOrders = await order.countDocuments()
     res.status(200).json({
       message: "success",
       data: {
         customers: getAllCustomers,
         deliveries: getAllDelIveries,
+        branchAdmins: getAllBranchAdmins,
         products: getAllProducts,
         categories: getAllCategories,
         branches: getAllBranches,
@@ -41,11 +43,12 @@ export const GetAllCustomers = async (req: Request, res: Response) => {
   }
 };
 
-
 //get all branch admins
 export const GetAllBranchAdmin = async (req: Request, res: Response) => {
   try {
-    const getBranchAdmins = await User.find({ role: "STORE_ADMIN" }).populate("branch");
+    const getBranchAdmins = await User.find({ role: "STORE_ADMIN" }).populate(
+      "branch"
+    );
     res.status(201).json({ message: "success", data: getBranchAdmins });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
@@ -91,10 +94,15 @@ export const CreateDeliveryMan = async (req: Request, res: Response) => {
     });
     if (emailExist)
       return res.status(400).json({ message: "emailExist already exist!" });
-      //hash the password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(deliveryData.password, salt);
-    const createDeliveryMan = await User.create({...deliveryData,password:hashedPassword,otpVerified:true,isRegistered:true});
+    //hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(deliveryData.password, salt);
+    const createDeliveryMan = await User.create({
+      ...deliveryData,
+      password: hashedPassword,
+      otpVerified: true,
+      isRegistered: true,
+    });
     res.status(201).json({ message: "success", data: createDeliveryMan });
   } catch (error) {
     if (error instanceof z.ZodError)
@@ -136,9 +144,14 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
     });
     if (emailExist)
       return res.status(400).json({ message: "emailExist already exist!" });
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(branchData.password, salt);
-    const createBranchManagerAdmin = await User.create({...branchData,password:hashedPassword,otpVerified:true,isRegistered:true});
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(branchData.password, salt);
+    const createBranchManagerAdmin = await User.create({
+      ...branchData,
+      password: hashedPassword,
+      otpVerified: true,
+      isRegistered: true,
+    });
     res
       .status(201)
       .json({ message: "success", data: createBranchManagerAdmin });
