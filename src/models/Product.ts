@@ -9,7 +9,7 @@ const productSchema = new mongoose.Schema<IProduct>(
     image: { type: [String] },
     description: { type: String },
     descriptionAm: { type: String },
-    wholeSalePrice: { type: Number },
+    wholeSalePrice: { type: String },
     hasSpecialOffer: { type: Boolean, default: false },
     isTodaysPick: { type: Boolean, default: false },
     view: { type: Number, default: 0 },
