@@ -20,7 +20,7 @@ export const CreateStore = async (req: Request, res: Response) => {
       const updateStoreItem = await Store.findOneAndUpdate(
         { product: storeData.product },
         { $set: storeData },
-        { $new: true }
+        { new: true }
       );
       res.status(200).json({ message: "success", data: updateStoreItem });
     } else {
