@@ -269,6 +269,61 @@ export const SignInForDelivery = async (req: Request, res: Response) => {
   }
 };
 
+//sign in for admin dashboard required to be admin or branch manager
+export const SignInForDashboard = async (req: Request, res: Response) => {
+  try {
+    const userSchema = z.object({
+      phone: z.number(),
+      password: z.string(),
+    });
+    const userData = userSchema.parse(req.body);
+
+    const oldUser = await User.findOne({
+      phone: userData.phone,
+      isRegistered: true,
+      otpVerified: true,
+    });
+
+    if (!oldUser)
+      return res.status(403).json({ message: "User doesn't exist" });
+    const isPasswordCorrect = await bcrypt.compare(
+      userData.password,
+      oldUser.password as string
+    );
+
+    if (!isPasswordCorrect)
+      return res.status(403).json({ message: "Invalid password" });
+    //check if the user is delivery
+    if (oldUser.role !== "ADMIN" && oldUser.role !== "STORE_ADMIN")
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to use this app!" });
+    if (oldUser.role == "STORE_ADMIN" && !oldUser.branch)
+    return res
+    .status(403)
+    .json({ message: "You are not assigned to any branch yet!" });
+    //
+    const token = jwt.sign(
+      {
+        phone: oldUser.phone,
+        role: oldUser.role,
+      },
+      process.env.JWT_KEY as Secret,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    res.status(200).json({ user: oldUser, token });
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: error.errors });
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 //forgot password
 // first send phone number
 export const ForgotPassword = async (req: Request, res: Response) => {

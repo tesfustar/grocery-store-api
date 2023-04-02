@@ -1,8 +1,9 @@
-import Product from "../models/Product";
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { z } from "zod";
+import Product from "../models/Product";
+import SearchHistory from "../models/SearchHistory";
 import Category from "../models/Category";
-import mongoose, { ObjectId } from "mongoose";
 //create new product
 
 export const CreateNewProduct = async (req: Request, res: Response) => {
@@ -131,12 +132,61 @@ export const GetProductsBySearch = async (req: Request, res: Response) => {
         { description: { $regex: query, $options: "i" } },
       ],
     });
+    const searchHistory = await SearchHistory.findOne({
+      query: { $regex: query, $options: "i" },
+    });
+    if (searchHistory) {
+      await SearchHistory.findOneAndUpdate(
+        { query: { $regex: query, $options: "i" } },
+        { $inc: { count: 1 } },
+        { upsert: true }
+      );
+    } else {
+      SearchHistory.create({ query: query, count: 1 });
+    }
     res.status(200).json({ message: "success", data: products });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
+//get top searched Products
+export const GetTopSearchProducts = async (req: Request, res: Response) => {
+  try {
+    // find the  single query that has large count
+    const topSearchQuery = await SearchHistory.aggregate([
+      {
+        $group: {
+          _id: "$query",
+          count: { $sum: "$count" },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: 1,
+      },
+      {
+        $project: {
+          _id: 0,
+          query: "$_id",
+          count: 1,
+        },
+      },
+    ]);
+    const topSearchProducts = await Product.find({
+      $or: [
+        { name: { $regex: topSearchQuery[0]?.query, $options: "i" } },
+        { description: { $regex: topSearchQuery[0]?.query, $options: "i" } },
+      ],
+    });
+
+    res.status(200).json({ message: "success", data: topSearchProducts });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
 //get single product detail
 export const GetSingleProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -180,11 +230,27 @@ export const GetMostlyViewedProducts = async (req: Request, res: Response) => {
   }
 };
 
-//get today pick products
+//get today pick products for user no auth
 export const GetTodaysPickProducts = async (req: Request, res: Response) => {
   try {
-    const todayDealProducts = await Product.find({isTodaysPick:true})
-      .populate("category")
+    const todayDealProducts = await Product.find({
+      isTodaysPick: true,
+    }).populate("category");
+    res.status(200).json({ success: true, data: todayDealProducts });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get today pick products for user no auth
+export const GetTodaysPickProductsForAdmin = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const todayDealProducts = await Product.find({
+      isTodaysPick: true,
+    }).populate("category");
     res.status(200).json({ success: true, data: todayDealProducts });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });

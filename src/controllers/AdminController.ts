@@ -118,7 +118,7 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
       location: z.number().array().optional(),
       address: z.string(),
       role: z.string(),
-      branch: z.string(),
+      branch: z.string().optional(),
     });
     const branchData = branchManagerSchema.parse(req.body);
     //check if the phone number of email is already taken
