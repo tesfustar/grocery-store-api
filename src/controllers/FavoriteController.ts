@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/User";
 import Favorite from "../models/Favorite";
+import Product from "../models/Product";
 import * as z from "zod";
 
 export const AddToFavorite = async (req: Request, res: Response) => {
@@ -14,6 +15,10 @@ export const AddToFavorite = async (req: Request, res: Response) => {
     const oldUser = await User.findById(id);
     if (!oldUser)
       return res.status(400).json({ message: "you are not verified user!" });
+    //check if the product is is exist
+    const productExist = await Product.findById(product);
+    if (!productExist)
+      return res.status(400).json({ message: "the product does not exist!" });
     //first find user favorite products
     const userFavorite = await Favorite.findById(id);
     if (userFavorite) {
@@ -39,8 +44,8 @@ export const AddToFavorite = async (req: Request, res: Response) => {
       //create the user favorite
       const createUserFavorite = new Favorite({
         _id: id,
-        userId: id,
-        properties: product,
+        user: id,
+        products: product,
       });
       const saveUserFavorite = await createUserFavorite.save();
       res.status(200).json({
@@ -54,13 +59,13 @@ export const AddToFavorite = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
 //remove product from user favorite
 
-export const removeUserFavorite = async (req: Request, res: Response) => {
+export const RemoveUserFavorite = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { product } = req.body;
   try {
@@ -96,12 +101,13 @@ export const removeUserFavorite = async (req: Request, res: Response) => {
   }
 };
 
-//get user favorite
-export const getUserFavorite = async (req: Request, res: Response) => {
+//get my favorites for customer auth required
+export const GetUserFavorite = async (req: Request, res: Response) => {
+  const { id } = req.params;
   try {
-    const userFavorite = await Favorite.findById(req.params.id).populate(
-      "products"
-    );
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "user not found!" });
+    const userFavorite = await Favorite.findById(id).populate("products");
     if (!userFavorite)
       return res.status(400).json({ message: "you have no favorite at all!" });
     res.status(200).json({ success: true, data: userFavorite });
