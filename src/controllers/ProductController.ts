@@ -266,3 +266,7 @@ export const GetTodaysPickProductsForAdmin = async (
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
+
+
+
+//check the cart items of product
