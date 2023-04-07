@@ -10,5 +10,6 @@ export interface IProduct {
   priceType:string;
   hasSpecialOffer: boolean;
   isTodaysPick:boolean;
-  view:number
+  view:number,
+  isOutOfStock:boolean;
 }

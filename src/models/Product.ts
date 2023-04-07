@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema<IProduct>(
     priceType: { type: String },
     hasSpecialOffer: { type: Boolean, default: false },
     isTodaysPick: { type: Boolean, default: false },
+    isOutOfStock: { type: Boolean, default: false },
     view: { type: Number, default: 0 },
   },
   { timestamps: true }
