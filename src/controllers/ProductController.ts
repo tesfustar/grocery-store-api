@@ -4,6 +4,7 @@ import { z } from "zod";
 import Product from "../models/Product";
 import SearchHistory from "../models/SearchHistory";
 import Category from "../models/Category";
+import Store from "../models/Store";
 //create new product
 
 export const CreateNewProduct = async (req: Request, res: Response) => {
@@ -58,6 +59,8 @@ export const DeleteProduct = async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await Product.findByIdAndDelete(id);
+    //delete all products also in the branches
+    await Store.deleteMany({product:id})
     res.status(200).json({ message: "product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

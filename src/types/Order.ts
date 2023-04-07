@@ -1,10 +1,11 @@
 import { ObjectId } from "mongoose";
 export interface IOrder {
+  branch: ObjectId;
   user: ObjectId;
   phoneNo: string;
   name: string;
   products: Product[];
-  amount: number;
+  totalPrice: number;
   address: Number[];
   status: string;
 }

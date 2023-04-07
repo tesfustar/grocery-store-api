@@ -6,14 +6,19 @@ import {
   GetAllDeliveries,
   CreateDeliveryMan,
   CreateBranchAdminMan,
+  GetDetailAboutBranches,
+  GetDetailAboutCustomer
 } from "../controllers/AdminController";
+import { VerifyTokenAndAdmin } from "../middlewares/Authorization";
 
 const router: Router = express.Router();
 
-router.get("/dashboard", GetAllCountInfo); //for super admin
-router.get("/customers", GetAllCustomers); //for super admin
-router.get("/branch-admins", GetAllBranchAdmin); //for super admin
-router.get("/deliveries", GetAllDeliveries); //for super admin
-router.post("/delivery/create", CreateDeliveryMan); //for super admin
-router.post("/branch-manager/create", CreateBranchAdminMan); //for super admin
+router.get("/dashboard",VerifyTokenAndAdmin, GetAllCountInfo); //for  admin
+router.get("/customers",VerifyTokenAndAdmin, GetAllCustomers); //for  admin
+router.get("/branch-admins",VerifyTokenAndAdmin, GetAllBranchAdmin); //for  admin
+router.get("/deliveries",VerifyTokenAndAdmin, GetAllDeliveries); //for  admin
+router.post("/delivery/create",VerifyTokenAndAdmin, CreateDeliveryMan); //for  admin
+router.post("/branch-manager/create",VerifyTokenAndAdmin, CreateBranchAdminMan); //for  admin
+router.get("/branch/detail/:branchId",VerifyTokenAndAdmin, GetDetailAboutBranches); //for  admin
+router.get("/customer/detail/:userId",VerifyTokenAndAdmin, GetDetailAboutCustomer); //for  admin
 export default router;

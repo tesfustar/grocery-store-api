@@ -6,16 +6,21 @@ import order from "../models/Order";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import Branch from "../models/Branch";
+import Store from "../models/Store";
 //for dashboard view
 export const GetAllCountInfo = async (req: Request, res: Response) => {
+  const { id } = req.params;
   try {
-    const getAllCustomers = await User.countDocuments({ role: "USER" })
-    const getAllDelIveries = await User.countDocuments({ role: "DELIVERY" })
-    const getAllBranchAdmins = await User.countDocuments({ role: "STORE_ADMIN", branch: { $ne: null } });
-    const getAllProducts = await Product.countDocuments()
-    const getAllCategories = await Category.countDocuments()
-    const getAllBranches = await Branch.countDocuments()
-    const getAllOrders = await order.countDocuments()
+    const getAllCustomers = await User.countDocuments({ role: "USER" });
+    const getAllDelIveries = await User.countDocuments({ role: "DELIVERY" });
+    const getAllBranchAdmins = await User.countDocuments({
+      role: "STORE_ADMIN",
+      branch: { $ne: null },
+    });
+    const getAllProducts = await Product.countDocuments();
+    const getAllCategories = await Category.countDocuments();
+    const getAllBranches = await Branch.countDocuments();
+    const getAllOrders = await order.countDocuments({ branch: id });
     res.status(200).json({
       message: "success",
       data: {
@@ -75,7 +80,7 @@ export const CreateDeliveryMan = async (req: Request, res: Response) => {
       firstName: z.string(),
       lastName: z.string(),
       location: z.number().array().optional(),
-      address: z.string(),
+      address: z.string().optional(),
       role: z.string(),
     });
     const deliveryData = deliverySchema.parse(req.body);
@@ -124,7 +129,7 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
       firstName: z.string(),
       lastName: z.string(),
       location: z.number().array().optional(),
-      address: z.string(),
+      address: z.string().optional(),
       role: z.string(),
       branch: z.string().optional(),
     });
@@ -160,6 +165,56 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get detail about branches for admin only
+
+export const GetDetailAboutBranches = async (req: Request, res: Response) => {
+  const { branchId } = req.params;
+  try {
+    const branch = await Branch.findById(branchId);
+    //check first the branch exist or not
+    if (!branch) return res.status(400).json({ message: "Branch not found !" });
+    const products = await Store.find().countDocuments({ branch: branchId });
+    const orders = await order.find().countDocuments({ branch: branchId });
+    const branchAdmins = await User.find().countDocuments({
+      branch: branchId,
+      role: "STORE_ADMIN",
+    });
+    const productList = await Store.find({ branch: branchId }).populate("product");
+    const orderList = await order.find({ branch: branchId });
+    const branchAdminList = await User.find({
+      branch: branchId,
+      role: "STORE_ADMIN",
+    });
+    res.status(200).json({
+      message: "success",
+      data: {
+        counts: { products, orders, branchAdmins },
+        lists: { productList, orderList, branchAdminList },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//get detail about customer for admin only
+export const GetDetailAboutCustomer = async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId);
+    //check first the user exist or not
+    if (!user) return res.status(400).json({ message: "user not found !" });
+    const userOrder = await order.find().countDocuments({ user: userId });
+    const userOrderList = await order.find({ user: userId });
+    res.status(200).json({
+      message: "success",
+      data: { counts: { userOrder }, lists: { userOrderList } },
+    });
+  } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };

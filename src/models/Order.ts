@@ -4,6 +4,7 @@ import { IOrder } from "../types/Order";
 const OrderSchema = new mongoose.Schema<IOrder>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
+    branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch" },
     phoneNo: { type: String },
     products: [
       {
@@ -11,7 +12,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
         quantity: { type: Number, default: 1 },
       },
     ],
-    amount: { type: Number, required: true },
+    totalPrice: { type: Number, required: true },
     address: { type: [Number], required: true },
     status: { type: String, default: "PENDING" },
   },

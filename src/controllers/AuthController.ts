@@ -203,6 +203,7 @@ export const SignInForCustomer = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
+        _id:oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },
@@ -250,6 +251,7 @@ export const SignInForDelivery = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
+        _id:oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },
@@ -305,6 +307,7 @@ export const SignInForDashboard = async (req: Request, res: Response) => {
     //
     const token = jwt.sign(
       {
+        _id:oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },
