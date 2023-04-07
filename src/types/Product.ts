@@ -6,7 +6,8 @@ export interface IProduct {
   image: Array<string>;
   description: string;
   descriptionAm: string;
-  wholeSalePrice: string;
+  price: number;
+  priceType:string;
   hasSpecialOffer: boolean;
   isTodaysPick:boolean;
   view:number

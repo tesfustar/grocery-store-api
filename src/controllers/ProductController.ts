@@ -16,7 +16,8 @@ export const CreateNewProduct = async (req: Request, res: Response) => {
       image: z.string().array(),
       description: z.string(),
       descriptionAm: z.string(),
-      wholeSalePrice: z.string(),
+      price: z.number(),
+      priceType: z.string(),
       hasSpecialOffer: z.boolean().optional(),
     });
     const productData = productSchema.parse(req.body);
