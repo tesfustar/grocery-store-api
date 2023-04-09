@@ -15,6 +15,7 @@ import branchAdmin from "./routes/branchAdmin";
 import searchHistory from "./routes/searchHistory";
 import favorite from "./routes/favorite";
 import order from "./routes/order";
+import coupon from "./routes/coupon";
 const app: Application = express();
 
 //default middleware
@@ -41,6 +42,7 @@ app.use("/api/branch-admin", branchAdmin);
 app.use("/api/search-history", searchHistory);
 app.use("/api/favorite", favorite);
 app.use("/api/order", order);
+app.use("/api/coupon", coupon);
 // Start the server
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));

@@ -1,10 +1,11 @@
 import mongoose, { ObjectId } from "mongoose";
-import { IOrder } from "../types/Order";
+import { IOrder, OrderStatus } from "../types/Order";
 
 const OrderSchema = new mongoose.Schema<IOrder>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
     branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch" },
+    inMainWareHouse: { type: Boolean,default:false },
     phoneNo: { type: String },
     products: [
       {
@@ -14,11 +15,23 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     ],
     totalPrice: { type: Number, required: true },
     address: { type: [Number], required: true },
-    status: { type: String, default: "PENDING" },
+    status: {
+      type: String,
+      default: OrderStatus.PENDING,
+      enum: Object.values(OrderStatus),
+    },
+    deliveryMan: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-const order = mongoose.model<IOrder>("Order", OrderSchema);
+OrderSchema.pre("validate", function (next) {
+  if (!this.branch) {
+    this.inMainWareHouse = true;
+  }
+  next();
+});
 
-export default order;
+const Order = mongoose.model<IOrder>("Order", OrderSchema);
+
+export default Order;

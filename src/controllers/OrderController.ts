@@ -5,6 +5,7 @@ import order from "../models/Order";
 import { z } from "zod";
 import Branch from "../models/Branch";
 import Store from "../models/Store";
+import Order from "../models/Order";
 import { ObjectId } from "mongoose";
 //make order
 
@@ -16,7 +17,9 @@ export const MakeOrder = async (req: Request, res: Response) => {
       phoneNo: z.number(),
       products: products.array().min(1),
       address: z.number().array().max(2),
+      totalPrice: z.number(),
     });
+    console.log(req.body)
     const orderBody = orderSchema.parse(req.body);
     //find near branch from user location
     const nearestBranches = await Branch.aggregate([
@@ -47,28 +50,29 @@ export const MakeOrder = async (req: Request, res: Response) => {
       }
       if (isBranchSuitable) {
         orderedBranchName = branch.name;
-        // await createOrderInBranch(branch._id, order);
-        console.log(orderedBranchName);
+        //create the order in that branch
+        await Order.create({
+          ...orderBody,
+          branch: branch._id,
+        });
+        // console.log(branch);
         isOrderCreated = true;
         break;
       }
     }
 
     if (isOrderCreated) {
+      //means product found in nearest branch
       res
         .status(200)
         .json({ message: `Order created in branch ${orderedBranchName}` });
     } else {
       //make the order in the main warehouse
-      res
-        .status(404)
-        .json({
-          message:
-            "Requested products are not available in the nearest branches",
-        });
+      await Order.create(orderBody);
+      res.status(200).json({
+        message: "Order created in main warehouse",
+      });
     }
-
-    //    res.status(200).json({message:"success",data:nearestBranches})
   } catch (error) {
     if (error instanceof z.ZodError)
       return res
@@ -78,14 +82,14 @@ export const MakeOrder = async (req: Request, res: Response) => {
   }
 };
 
-//    const nearestBranch = await Branch.find({
-//     location: {
-//         $near: {
-//           $geometry: {
-//             type: 'Point',
-//             coordinates: [orderBody.address[0], orderBody.address[1]]
-//           },
-//           $maxDistance: 100000000000 // max distance in meters
-//         }
-//       }
-//    }).exec()
+
+
+//get all orders for main warehouse admin
+export const GetAllMainWareHouseOrders=async (req: Request, res: Response)=>{
+try {
+  const getAllOrders = await Order.find().populate("user")
+  res.status(200).json({message:"success",data:getAllOrders})
+} catch (error) {
+  res.status(500).json({ message: `Internal server error ${error}` });
+}
+}

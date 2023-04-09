@@ -20,4 +20,5 @@ export interface IUser {
   isRegistered: boolean;
   role: UserRole;
   branch: ObjectId | null;
+  isAccountHidden: boolean;
 }

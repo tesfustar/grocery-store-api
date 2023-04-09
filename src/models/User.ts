@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema<IUser>(
     address: { type: String },
     otpVerified: { type: Boolean, default: false },
     isRegistered: { type: Boolean, default: false },
+    isAccountHidden: { type: Boolean, default: false },
     role: { type: String, default: UserRole.USER, enum: Object.keys(UserRole) },
     branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch",default:null}
   },
