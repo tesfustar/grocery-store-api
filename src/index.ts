@@ -16,6 +16,7 @@ import searchHistory from "./routes/searchHistory";
 import favorite from "./routes/favorite";
 import order from "./routes/order";
 import coupon from "./routes/coupon";
+import user from "./routes/user";
 const app: Application = express();
 
 //default middleware
@@ -32,6 +33,7 @@ app.get("/", (req: Request, res: Response) => {
 
 //routes
 app.use("/api/auth", auth);
+app.use("/api/user", user);
 app.use("/api/category", category);
 app.use("/api/product", product);
 app.use("/api/admin", admin);

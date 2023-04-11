@@ -5,6 +5,11 @@ export enum OrderStatus {
   CANCELED = "CANCELED",
   ONGOING = "ONGOING",
 }
+export enum ShippingType {
+  FREE = "FREE",
+  EXPRESS = "EXPRESS",
+  FLAT = "FLAT",
+}
 
 export interface IOrder {
   branch: ObjectId;
@@ -18,6 +23,8 @@ export interface IOrder {
   status: OrderStatus;
   deliveryMan: ObjectId;
   inRejected:boolean;
+  // shippingType:ShippingType;
+  // paymentType:string
 }
 
 interface Product {
