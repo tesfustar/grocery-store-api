@@ -1,11 +1,16 @@
 import mongoose, { ObjectId } from "mongoose";
-import { IOrder, OrderStatus } from "../types/Order";
+import {
+  IOrder,
+  OrderStatus,
+  PaymentMethod,
+  ShippingType,
+} from "../types/Order";
 
 const OrderSchema = new mongoose.Schema<IOrder>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
     branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch" },
-    inMainWareHouse: { type: Boolean,default:false },
+    inMainWareHouse: { type: Boolean, default: false },
     phoneNo: { type: String },
     products: [
       {
@@ -15,12 +20,23 @@ const OrderSchema = new mongoose.Schema<IOrder>(
     ],
     totalPrice: { type: Number, required: true },
     address: { type: [Number], required: true },
+    deliveryTime: { type: String, required: true },
     status: {
       type: String,
       default: OrderStatus.PENDING,
       enum: Object.values(OrderStatus),
     },
     deliveryMan: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
+    shippingType: {
+      type: String,
+      default: ShippingType.FLAT,
+      enum: Object.values(ShippingType),
+    },
+    paymentMethod: {
+      type: String,
+      default: PaymentMethod.CASH,
+      enum: Object.values(PaymentMethod),
+    },
   },
   { timestamps: true }
 );

@@ -9,8 +9,12 @@ export enum ShippingType {
   FREE = "FREE",
   EXPRESS = "EXPRESS",
   FLAT = "FLAT",
-}
+} 
 
+export enum PaymentMethod {
+  CASH = "CASH",
+
+}
 export interface IOrder {
   branch: ObjectId;
   inMainWareHouse:boolean;
@@ -22,9 +26,10 @@ export interface IOrder {
   address: Number[];
   status: OrderStatus;
   deliveryMan: ObjectId;
+  deliveryTime:string;
   inRejected:boolean;
-  // shippingType:ShippingType;
-  // paymentType:string
+  shippingType:ShippingType;
+  paymentMethod:PaymentMethod
 }
 
 interface Product {

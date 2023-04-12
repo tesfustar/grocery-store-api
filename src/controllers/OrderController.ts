@@ -7,6 +7,7 @@ import Branch from "../models/Branch";
 import Store from "../models/Store";
 import Order from "../models/Order";
 import { ObjectId } from "mongoose";
+import { ShippingType } from "../types/Order";
 //make order
 
 export const MakeOrder = async (req: Request, res: Response) => {
@@ -18,8 +19,11 @@ export const MakeOrder = async (req: Request, res: Response) => {
       products: products.array().min(1),
       address: z.number().array().max(2),
       totalPrice: z.number(),
+      deliveryTime: z.string(),
+      shippingType: z.enum(["FREE", "EXPRESS", "FLAT"]),
+      paymentMethod: z.enum(["CASH"]),
     });
-    console.log(req.body)
+    console.log(req.body);
     const orderBody = orderSchema.parse(req.body);
     //find near branch from user location
     const nearestBranches = await Branch.aggregate([
@@ -82,14 +86,34 @@ export const MakeOrder = async (req: Request, res: Response) => {
   }
 };
 
-
-
 //get all orders for main warehouse admin
-export const GetAllMainWareHouseOrders=async (req: Request, res: Response)=>{
-try {
-  const getAllOrders = await Order.find().populate("user")
-  res.status(200).json({message:"success",data:getAllOrders})
-} catch (error) {
-  res.status(500).json({ message: `Internal server error ${error}` });
-}
-}
+export const GetAllMainWareHouseOrders = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const getAllOrders = await Order.find().populate("user");
+    res.status(200).json({ message: "success", data: getAllOrders });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//get detail for main warehouse admin
+export const GetDetailMainWareHouseOrder = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findOne({ _id: id, inMainWareHouse: true });
+    if (!order) return res.status(400).json({ message: "order not found" });
+    const singleOrder = await Order.findOne({
+      _id: id,
+      inMainWareHouse: true,
+    }).populate("products.product").populate("user");
+    res.status(200).json({ message: "success", data: singleOrder });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
