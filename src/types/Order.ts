@@ -12,8 +12,7 @@ export enum ShippingType {
 } 
 
 export enum PaymentMethod {
-  CASH = "CASH",
-
+  CASH = "CASH", //means payment on delivery
 }
 export interface IOrder {
   branch: ObjectId;

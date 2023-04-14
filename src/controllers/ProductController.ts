@@ -5,6 +5,7 @@ import Product from "../models/Product";
 import SearchHistory from "../models/SearchHistory";
 import Category from "../models/Category";
 import Store from "../models/Store";
+import Order from "../models/Order";
 //create new product
 
 export const CreateNewProduct = async (req: Request, res: Response) => {
@@ -61,7 +62,7 @@ export const DeleteProduct = async (req: Request, res: Response) => {
   try {
     await Product.findByIdAndDelete(id);
     //delete all products also in the branches
-    await Store.deleteMany({product:id})
+    await Store.deleteMany({ product: id });
     res.status(200).json({ message: "product deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -79,7 +80,6 @@ export const GetProducts = async (req: Request, res: Response) => {
   }
 };
 
-
 //for branches only
 export const GetProductsForBranches = async (req: Request, res: Response) => {
   try {
@@ -91,18 +91,11 @@ export const GetProductsForBranches = async (req: Request, res: Response) => {
 };
 //send paginated products to users no auth required
 export const GetProductsForCustomers = async (req: Request, res: Response) => {
-  const options = {
-    page: req.query.page,
-    limit: 10,
-    collation: {
-      locale: "en",
-    },
-  };
   try {
     const page = Number(req.query.page) || 1;
     const perPage = Number(req.query.perPage) || 3;
 
-    const products = await Product.find()
+    const products = await Product.find() //sure before it is out of stock {isOutOfStock:false}
       .skip((page - 1) * perPage)
       .limit(perPage);
 
@@ -271,6 +264,107 @@ export const GetTodaysPickProductsForAdmin = async (
   }
 };
 
-
-
 //check the cart items of product
+
+//update stock type out of stock
+export const MakeProductOutOfStock = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    //check first the user product or not
+    if (!product)
+      return res.status(400).json({ message: "product not found !" });
+    const isAlreadyOutOfStock = await Product.findOne({
+      _id: id,
+      isOutOfStock: true,
+    });
+    if (isAlreadyOutOfStock)
+      return res
+        .status(400)
+        .json({ message: "product is already out of stock !" });
+    const makeItInStock = await Product.findByIdAndUpdate(
+      id,
+      { $set: { isOutOfStock: true } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "success",
+      data: makeItInStock,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+
+//make it in stock
+export const MakeProductInStock = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    //check first the user product or not
+    if (!product)
+      return res.status(400).json({ message: "product not found !" });
+    const isAlreadyInStock = await Product.findOne({
+      _id: id,
+      isOutOfStock: false,
+    });
+    if (isAlreadyInStock)
+      return res
+        .status(400)
+        .json({ message: "product is already in stock !" });
+
+    const makeItOutOfStockStock = await Product.findByIdAndUpdate(
+      id,
+      { $set: { isOutOfStock: false } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "success",
+      data: makeItOutOfStockStock,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+
+//for dashboard view get top sell products
+export const GetTopSellProducts = async (req: Request, res: Response) => {
+  try {
+    const topProducts = await Order.aggregate([
+      {
+        $unwind: '$products',
+      },
+      {
+        $group: {
+          _id: '$products.product',
+          soldQuantity: { $sum: '$products.quantity' },
+        },
+      },
+      {
+        $sort: { soldQuantity: -1 },
+      },
+      {
+        $limit: 10,
+      },
+    ]);
+    const topProductsDetails = await Product.find({
+      _id: { $in: topProducts.map((p) => p._id) },
+    });
+  
+    // Merge the soldQuantity field from the aggregate result with the product details
+    // const topSellingProducts = topProductsDetails.map((p) => {
+    //   const soldProduct = topProducts.find((sp) => sp._id.toString() === p._id.toString());
+    //   return {
+    //     ...p.toObject(),
+    //     soldQuantity: soldProduct ? soldProduct.soldQuantity : 0,
+    //   };
+    // });
+    res.status(200).json({ message: "success", data: topProductsDetails });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

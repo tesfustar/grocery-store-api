@@ -7,7 +7,7 @@ import {
   CreateDeliveryMan,
   CreateBranchAdminMan,
   GetDetailAboutBranches,
-  GetDetailAboutCustomer
+  GetDetailAboutCustomer,
 } from "../controllers/AdminController";
 import { VerifyTokenAndAdmin } from "../middlewares/Authorization";
 
@@ -21,4 +21,5 @@ router.post("/delivery/create",VerifyTokenAndAdmin, CreateDeliveryMan); //for  a
 router.post("/branch-manager/create",VerifyTokenAndAdmin, CreateBranchAdminMan); //for  admin
 router.get("/branch/detail/:branchId",VerifyTokenAndAdmin, GetDetailAboutBranches); //for  admin
 router.get("/customer/detail/:userId",VerifyTokenAndAdmin, GetDetailAboutCustomer); //for  admin
+
 export default router;

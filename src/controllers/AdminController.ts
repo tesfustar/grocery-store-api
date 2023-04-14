@@ -37,6 +37,8 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
+
+
 //get all customers
 
 export const GetAllCustomers = async (req: Request, res: Response) => {
@@ -218,3 +220,5 @@ export const GetDetailAboutCustomer = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
+
+

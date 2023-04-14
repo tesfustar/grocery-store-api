@@ -93,9 +93,9 @@ export const GetAllMainWareHouseOrders = async (
 ) => {
   try {
     const getAllOrders = await Order.find().populate("user");
-    res.status(200).json({ message: "success", data: getAllOrders });
+    res.status(200).json({ message: "success", data: getAllOrders })
   } catch (error) {
-    res.status(500).json({ message: `Internal server error ${error}` });
+    res.status(500).json({ message: `Internal server error ${error}` })
   }
 };
 
