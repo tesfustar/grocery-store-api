@@ -7,7 +7,8 @@ import Branch from "../models/Branch";
 import Store from "../models/Store";
 import Order from "../models/Order";
 import { ObjectId } from "mongoose";
-import { ShippingType } from "../types/Order";
+import { ShippingType, PaymentMethod } from "../types/Order";
+import { OrderStatus } from "../types/Order";
 //make order
 
 export const MakeOrder = async (req: Request, res: Response) => {
@@ -20,11 +21,33 @@ export const MakeOrder = async (req: Request, res: Response) => {
       address: z.number().array().max(2),
       totalPrice: z.number(),
       deliveryTime: z.string(),
-      shippingType: z.enum(["FREE", "EXPRESS", "FLAT"]),
-      paymentMethod: z.enum(["CASH"]),
+      shippingType: z.nativeEnum(ShippingType),
+      paymentMethod: z.nativeEnum(PaymentMethod),
     });
-    console.log(req.body);
     const orderBody = orderSchema.parse(req.body);
+    //first check if user is verified and exist and not banned by admin
+    const user = await User.findOne({
+      _id: orderBody.user,
+      isRegistered: true,
+    });
+    if (!user)
+      return res.status(200).json({ message: "you are not verified user" });
+    //check if user account is hidden
+    const isAccountBanned = await User.findOne({
+      _id: orderBody.user,
+      isAccountHidden: true,
+    });
+    if (isAccountBanned)
+      return res
+        .status(200)
+        .json({ message: "you can't order now! your account is banned!" });
+    //then find each product exist or not
+    // for (const product of orderBody.products) {
+    // }
+    const isProductExist = orderBody.products.some(async ({ product }) => {
+      return await Product.findById(product);
+    });
+    console.log(isProductExist);
     //find near branch from user location
     const nearestBranches = await Branch.aggregate([
       {
@@ -93,9 +116,9 @@ export const GetAllMainWareHouseOrders = async (
 ) => {
   try {
     const getAllOrders = await Order.find().populate("user");
-    res.status(200).json({ message: "success", data: getAllOrders })
+    res.status(200).json({ message: "success", data: getAllOrders });
   } catch (error) {
-    res.status(500).json({ message: `Internal server error ${error}` })
+    res.status(500).json({ message: `Internal server error ${error}` });
   }
 };
 
@@ -111,8 +134,58 @@ export const GetDetailMainWareHouseOrder = async (
     const singleOrder = await Order.findOne({
       _id: id,
       inMainWareHouse: true,
-    }).populate("products.product").populate("user");
+    })
+      .populate("products.product")
+      .populate("user");
     res.status(200).json({ message: "success", data: singleOrder });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//delete order
+
+export const DeleteMainWareHouseOrder = async (req: Request, res: Response) => {
+  //first check order exist or not
+  const { id } = req.params;
+  const order = await Order.findById(id);
+  if (!order) return res.status(404).json({ message: "order not found!" });
+  await Order.findByIdAndDelete(id);
+  res.status(200).json({ message: "order deleted successfully" });
+  try {
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//get list of orders for customer
+export const GetMyOrders = async (req: Request, res: Response) => {
+  //first check order exist or not
+  const { userId } = req.params;
+  const order = await Order.findOne({user:userId});
+  if (!order)
+    return res.status(404).json({ message: "you have't any order yet!'" });
+  const pendingOrders = await Order.find({
+    user: userId,
+    status: OrderStatus.PENDING,
+  });
+  const canceledOrders = await Order.find({
+    user: userId,
+    status: OrderStatus.CANCELED,
+  });
+  const deliveredOrders = await Order.find({
+    user: userId,
+    status: OrderStatus.DELIVERED,
+  });
+  res.status(200).json({
+    message: "success",
+    data: {
+      pending: pendingOrders,
+      canceled: canceledOrders,
+      delivered: deliveredOrders,
+    },
+  });
+  try {
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }

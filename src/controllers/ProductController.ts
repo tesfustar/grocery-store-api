@@ -142,14 +142,16 @@ export const GetProductsBySearch = async (req: Request, res: Response) => {
     const searchHistory = await SearchHistory.findOne({
       query: { $regex: query, $options: "i" },
     });
-    if (searchHistory) {
-      await SearchHistory.findOneAndUpdate(
-        { query: { $regex: query, $options: "i" } },
-        { $inc: { count: 1 } },
-        { upsert: true }
-      );
-    } else {
-      SearchHistory.create({ query: query, count: 1 });
+    if (products?.length > 0) {
+      if (searchHistory) {
+        await SearchHistory.findOneAndUpdate(
+          { query: { $regex: query, $options: "i" } },
+          { $inc: { count: 1 } },
+          { upsert: true }
+        );
+      } else {
+        SearchHistory.create({ query: query, count: 1 });
+      }
     }
     res.status(200).json({ message: "success", data: products });
   } catch (error) {
@@ -297,7 +299,6 @@ export const MakeProductOutOfStock = async (req: Request, res: Response) => {
   }
 };
 
-
 //make it in stock
 export const MakeProductInStock = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -311,9 +312,7 @@ export const MakeProductInStock = async (req: Request, res: Response) => {
       isOutOfStock: false,
     });
     if (isAlreadyInStock)
-      return res
-        .status(400)
-        .json({ message: "product is already in stock !" });
+      return res.status(400).json({ message: "product is already in stock !" });
 
     const makeItOutOfStockStock = await Product.findByIdAndUpdate(
       id,
@@ -330,18 +329,17 @@ export const MakeProductInStock = async (req: Request, res: Response) => {
   }
 };
 
-
 //for dashboard view get top sell products
 export const GetTopSellProducts = async (req: Request, res: Response) => {
   try {
     const topProducts = await Order.aggregate([
       {
-        $unwind: '$products',
+        $unwind: "$products",
       },
       {
         $group: {
-          _id: '$products.product',
-          soldQuantity: { $sum: '$products.quantity' },
+          _id: "$products.product",
+          soldQuantity: { $sum: "$products.quantity" },
         },
       },
       {
@@ -354,7 +352,7 @@ export const GetTopSellProducts = async (req: Request, res: Response) => {
     const topProductsDetails = await Product.find({
       _id: { $in: topProducts.map((p) => p._id) },
     });
-  
+
     // Merge the soldQuantity field from the aggregate result with the product details
     // const topSellingProducts = topProductsDetails.map((p) => {
     //   const soldProduct = topProducts.find((sp) => sp._id.toString() === p._id.toString());
