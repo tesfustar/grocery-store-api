@@ -1,4 +1,4 @@
-import { ObjectId } from "mongoose";
+import { ObjectId, Document } from "mongoose";
 export enum OrderStatus {
   PENDING = "PENDING",
   DELIVERED = "DELIVERED",
@@ -14,7 +14,7 @@ export enum ShippingType {
 export enum PaymentMethod {
   CASH = "CASH", //means payment on delivery
 }
-export interface IOrder {
+export interface IOrder extends Document{
   branch: ObjectId;
   inMainWareHouse:boolean;
   user: ObjectId;

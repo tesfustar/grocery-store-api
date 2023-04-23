@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { Secret } from "jsonwebtoken";
+import { IUser, UserRole } from "../types/User";
 
 interface AuthRequest extends Request {
   user?: any;
@@ -13,12 +14,12 @@ export const VerifyToken = (
   if (authHeader) {
     const token = authHeader.split(" ")[1];
     jwt.verify(token, process.env.JWT_KEY as Secret, (err, user) => {
-      if (err) return res.status(403).json({message:"Token is not valid!"});
+      if (err) return res.status(403).json({ message: "Token is not valid!" });
       req.user = user;
       next();
     });
   } else {
-    return res.status(401).json({message:"You are not authenticated!"});
+    return res.status(401).json({ message: "You are not authenticated!" });
   }
 };
 
@@ -32,7 +33,7 @@ export const VerifyTokenAndAuthorization = (
     if (req.user._id === req.params.id || req.user.role) {
       next();
     } else {
-      return res.status(401).json({message:"you are not authorized user"});
+      return res.status(401).json({ message: "you are not authorized user" });
     }
   });
 };
@@ -44,25 +45,26 @@ export const VerifyTokenAndAdmin = (
   next: NextFunction
 ) => {
   VerifyToken(req, res, () => {
-    if (req.user.role === "ADMIN") {
+    if (req.user.role === UserRole.ADMIN) {
       next();
     } else {
-      res.status(403).json({message:"you have not admin!"});
+      res.status(403).json({ message: "you have not admin!" });
     }
   });
 };
 
-//ABOUT ADMIN
+//ABOUT BRANCH ADMIN
 
-// export const verifyTokenAndAdmin=(req:Request,res:Response,next:NextFunction)=>{
-//     VerifyToken(req,res,()=>{
-//         if( req.user.isAdmin)  {
-//              next()
-//           }
-//         else{
-//              res.status(403).json("you are not admin")
-//             }
-//     })
-// }
-
-//ABOUT STORE ADMIN
+export const verifyTokenAndBranchAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  VerifyToken(req, res, () => {
+    if (req.user.role === UserRole.STORE_ADMIN) {
+      next();
+    } else {
+      res.status(403).json({ message: "you have not branch admin!" });
+    }
+  });
+};

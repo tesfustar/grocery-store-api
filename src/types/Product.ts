@@ -1,5 +1,5 @@
-import  { ObjectId } from "mongoose";
-export interface IProduct {
+import  { ObjectId ,Document} from "mongoose";
+export interface IProduct extends Document {
   category: ObjectId;
   name: string;
   nameAm: string;

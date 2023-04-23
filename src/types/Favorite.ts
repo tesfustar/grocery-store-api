@@ -1,5 +1,5 @@
-import  { ObjectId } from "mongoose";
-export interface IFavorite {
+import  { ObjectId,Document } from "mongoose";
+export interface IFavorite extends Document{
     user: ObjectId;
     products: Array<ObjectId>;
   }

@@ -1,4 +1,4 @@
-import { ObjectId } from "mongoose";
+import { ObjectId,Document } from "mongoose";
 export enum UserRole {
   USER = "USER",
   DELIVERY = "DELIVERY",
@@ -7,7 +7,7 @@ export enum UserRole {
   STORE_ADMIN = "STORE_ADMIN",
 }
 
-export interface IUser {
+export interface IUser extends Document {
   phone: number;
   email?: string;
   password: string;

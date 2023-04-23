@@ -18,6 +18,7 @@ import order from "./routes/order";
 import coupon from "./routes/coupon";
 import user from "./routes/user";
 import delivery from "./routes/delivery";
+import productRequest from "./routes/productRequest";
 const app: Application = express();
 
 //default middleware
@@ -34,7 +35,7 @@ app.get("/", (req: Request, res: Response) => {
 
 //routes
 app.use("/api/auth", auth);
-app.use("/api/user", user);
+app.use("/api/user", user)
 app.use("/api/category", category);
 app.use("/api/product", product);
 app.use("/api/admin", admin);
@@ -47,6 +48,7 @@ app.use("/api/favorite", favorite);
 app.use("/api/order", order);
 app.use("/api/coupon", coupon);
 app.use("/api/delivery", delivery);
+app.use("/api/productRequest", productRequest);
 // Start the server
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));

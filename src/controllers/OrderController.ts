@@ -115,7 +115,9 @@ export const GetAllMainWareHouseOrders = async (
   res: Response
 ) => {
   try {
-    const getAllOrders = await Order.find().populate("user");
+    const getAllOrders = await Order.find({ inMainWareHouse: true }).populate(
+      "user"
+    );
     res.status(200).json({ message: "success", data: getAllOrders });
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
@@ -162,7 +164,7 @@ export const DeleteMainWareHouseOrder = async (req: Request, res: Response) => {
 export const GetMyOrders = async (req: Request, res: Response) => {
   //first check order exist or not
   const { userId } = req.params;
-  const order = await Order.findOne({user:userId});
+  const order = await Order.findOne({ user: userId });
   if (!order)
     return res.status(404).json({ message: "you have't any order yet!'" });
   const pendingOrders = await Order.find({
@@ -186,6 +188,67 @@ export const GetMyOrders = async (req: Request, res: Response) => {
     },
   });
   try {
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//get branches order only for branches
+export const GetAllBranchOrders = async (req: Request, res: Response) => {
+  const { branchId } = req.params;
+  try {
+    const isBranchExist = await Branch.findById(branchId);
+    if (!isBranchExist)
+      return res.status(404).json({ message: "branch not found!" });
+    const getAllBranchOrders = await Order.find({
+      inMainWareHouse: false,
+      branch: branchId,
+    }).populate("user");
+    res.status(200).json({ message: "success", data: getAllBranchOrders });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//update order status for main house order
+export const UpdateMainHouseOrderStatus = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params;
+  try {
+    //first find the order
+    const order = await Order.findById(id);
+    if (!order || !order.inMainWareHouse)
+      return res.status(404).json({ message: "order not found!" });
+    //
+
+    const updateOrderStatus = Order.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json({ message: "success", data: updateOrderStatus });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//update branch order
+export const UpdateBranchOrderStatus = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    //first find the order
+    const order = await Order.findById(id);
+    if (!order || order.inMainWareHouse)
+      return res.status(404).json({ message: "order not found!" });
+    //update it
+    const updateOrderStatus = Order.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json({ message: "success", data: updateOrderStatus });
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }
