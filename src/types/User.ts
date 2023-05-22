@@ -7,6 +7,11 @@ export enum UserRole {
   STORE_ADMIN = "STORE_ADMIN",
 }
 
+
+export interface IUserAddress{
+  address?: string;
+  location?: Number[];
+}
 export interface IUser extends Document {
   phone: number;
   email?: string;
@@ -14,8 +19,7 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   profile?: string;
-  address?: string;
-  location?: Number[];
+  address?: IUserAddress[];
   otpVerified: boolean;
   isRegistered: boolean;
   role: UserRole;

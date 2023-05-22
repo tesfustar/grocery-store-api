@@ -9,16 +9,21 @@ import Order from "../models/Order";
 import { ObjectId } from "mongoose";
 import { ShippingType, PaymentMethod } from "../types/Order";
 import { OrderStatus } from "../types/Order";
+import { UserRole } from "../types/User";
 //make order
 
 export const MakeOrder = async (req: Request, res: Response) => {
   try {
+    const addressSchema = z.object({
+      location: z.number().array(),
+      address: z.string(),
+    });
     const products = z.object({ product: z.string(), quantity: z.number() });
     const orderSchema = z.object({
       user: z.string(),
       phoneNo: z.number(),
       products: products.array().min(1),
-      address: z.number().array().max(2),
+      address: addressSchema,
       totalPrice: z.number(),
       deliveryTime: z.string(),
       shippingType: z.nativeEnum(ShippingType),
@@ -54,7 +59,10 @@ export const MakeOrder = async (req: Request, res: Response) => {
         $geoNear: {
           near: {
             type: "Point",
-            coordinates: [orderBody.address[0], orderBody.address[1]],
+            coordinates: [
+              orderBody.address.location[0],
+              orderBody.address.location[1],
+            ],
           },
           distanceField: "distance",
           spherical: true,
@@ -147,7 +155,7 @@ export const GetDetailMainWareHouseOrder = async (
 
 //delete order
 
-export const DeleteMainWareHouseOrder = async (req: Request, res: Response) => {
+export const DeleteMainWareHouseOrder:any = async (req: Request, res: Response) => {
   //first check order exist or not
   const { id } = req.params;
   const order = await Order.findById(id);
@@ -250,6 +258,39 @@ export const UpdateBranchOrderStatus = async (req: Request, res: Response) => {
     );
     res.status(200).json({ message: "success", data: updateOrderStatus });
   } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+export const AssignDeliveryBoy = async (req: Request, res: Response) => {
+  const { id } = req.params; //orderId
+  try {
+    const deliverySchema = z.object({
+      deliveryId: z.string(),
+    });
+    const orderBody = deliverySchema.parse(req.body);
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ message: "order not found!" });
+    //check if the user is delivery or not
+    const isUserDelivery = await User.findOne({
+      _id: orderBody.deliveryId,
+      role: UserRole.DELIVERY,
+    });
+    if (!isUserDelivery)
+      return res.status(404).json({ message: "user is not delivery boy" });
+    //update the order and assign delivery boyne
+
+    const assignDelivery = await Order.findByIdAndUpdate(
+      id,
+      { $set: { deliveryMan: orderBody.deliveryId } },
+      { new: true }
+    );
+    res.status(200).json({ message: "success", data: assignDelivery });
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: error.errors });
     res.status(500).json({ message: `Internal server error ${error}` });
   }
 };

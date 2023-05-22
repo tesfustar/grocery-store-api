@@ -5,7 +5,12 @@ import {
   PaymentMethod,
   ShippingType,
 } from "../types/Order";
+import { IUserAddress } from "../types/User";
 
+const AddressSchema = new mongoose.Schema<IUserAddress>({
+  location: { type: [Number] },
+  address: { type: String },
+});
 const OrderSchema = new mongoose.Schema<IOrder>(
   {
     user: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
@@ -19,7 +24,7 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       },
     ],
     totalPrice: { type: Number, required: true },
-    address: { type: [Number], required: true },
+    address: AddressSchema,
     deliveryTime: { type: String, required: true },
     status: {
       type: String,

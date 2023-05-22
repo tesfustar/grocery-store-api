@@ -1,6 +1,10 @@
 import mongoose, { ObjectId } from "mongoose";
-import { IUser, UserRole } from "../types/User";
+import { IUser, IUserAddress, UserRole } from "../types/User";
 
+const AddressSchema = new mongoose.Schema<IUserAddress>({
+  location: { type: [Number] },
+  address: { type: String },
+});
 const userSchema = new mongoose.Schema<IUser>(
   {
     phone: { type: Number, unique: true },
@@ -13,13 +17,16 @@ const userSchema = new mongoose.Schema<IUser>(
       default:
         "https://t3.ftcdn.net/jpg/03/46/83/96/240_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg",
     },
-    location: { type: [Number] },
-    address: { type: String },
+    address: [AddressSchema],
     otpVerified: { type: Boolean, default: false },
     isRegistered: { type: Boolean, default: false },
     isAccountHidden: { type: Boolean, default: false },
     role: { type: String, default: UserRole.USER, enum: Object.keys(UserRole) },
-    branch: { type: mongoose.SchemaTypes.ObjectId, ref: "Branch",default:null}
+    branch: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Branch",
+      default: null,
+    },
   },
   { timestamps: true }
 );

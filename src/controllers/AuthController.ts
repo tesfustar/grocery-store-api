@@ -122,46 +122,53 @@ export const VerifyOtp = async (req: Request, res: Response) => {
 // //register user with full information
 export const RegisterUser = async (req: Request, res: Response) => {
   try {
+    const addressSchema=z.object({
+      location:z.number().array(),
+      address:z.string()
+    })
     const userSchema = z.object({
       phone: z.number(),
       email: z.string().email(),
       password: z.string().min(6),
       firstName: z.string(),
       lastName: z.string(),
-      location: z.number().optional(),
-      address: z.string().array(),
+      address: addressSchema.array().optional(),
     });
     const userData = userSchema.parse(req.body);
-    const oldUser = await User.findOne({
-      phone: userData.phone,
-      otpVerified: true,
-    });
-    if (!oldUser)
-      return res.status(400).json({ message: "you are not verified user!" });
+    // const oldUser = await User.findOne({
+    //   phone: userData.phone,
+    //   otpVerified: true,
+    // });
+    // if (!oldUser)
+    //   return res.status(400).json({ message: "you are not verified user!" });
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
     const address: any = await axios
       .get(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${userData.address[1]},${userData.address[0]}&key=${process.env.GOOGLE_MAP_API_KEY}`
-        // `https://maps.googleapis.com/maps/api/geocode/json?latlng=38.76486078990507,8.995699507506966&key=AIzaSyDd81MpJcxjNdICQeKRg3Emywp4e_29Sfc`
+        // `https://maps.googleapis.com/maps/api/geocode/json?latlng=${userData.address[1]},${userData.address[0]}&key=${process.env.GOOGLE_MAP_API_KEY}`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=9.0107&lon=38.7748`
       )
       .then(async (response) => {
-        const address =
-          response.data.results[0].address_components[2].long_name;
+        // const address =
+          // response.data.results[0].address_components[2].long_name;
         // console.log(address)
-        const registeredUser = await User.findByIdAndUpdate(
-          oldUser.id,
-          {
-            $set: {
-              ...userData,
-              password: hashedPassword,
-              isRegistered: true,
-              address:
-                response.data.results[0]?.address_components[2]?.long_name,
-            },
-          },
-          { new: true }
-        );
+        // const registeredUser = await User.findByIdAndUpdate(
+        //   oldUser.id,
+        //   {
+        //     $set: {
+        //       ...userData,
+        //       password: hashedPassword,
+        //       isRegistered: true,
+        //       address:response?.data?.display_name ? response?.data?.display_name : "unknown"
+        //     },
+        //   },
+        //   { new: true }
+        // );
+        const registeredUser = await User.create({
+          ...userData,
+          password: hashedPassword,
+          isRegistered: true,
+        })
         const token = jwt.sign(
           { phone: registeredUser?.phone, isAdmin: registeredUser?.role },
           process.env.JWT_KEY as Secret,
@@ -203,7 +210,7 @@ export const SignInForCustomer = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
-        _id:oldUser._id,
+        _id: oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },
@@ -251,7 +258,7 @@ export const SignInForDelivery = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       {
-        _id:oldUser._id,
+        _id: oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },
@@ -282,8 +289,8 @@ export const SignInForDashboard = async (req: Request, res: Response) => {
 
     const oldUser = await User.findOne({
       phone: userData.phone,
-      isRegistered: true,
-      otpVerified: true,
+      // isRegistered: true,
+      // otpVerified: true,
     });
 
     if (!oldUser)
@@ -301,13 +308,13 @@ export const SignInForDashboard = async (req: Request, res: Response) => {
         .status(403)
         .json({ message: "You are not authorized to use this app!" });
     if (oldUser.role == "STORE_ADMIN" && !oldUser.branch)
-    return res
-    .status(403)
-    .json({ message: "You are not assigned to any branch yet!" });
+      return res
+        .status(403)
+        .json({ message: "You are not assigned to any branch yet!" });
     //
     const token = jwt.sign(
       {
-        _id:oldUser._id,
+        _id: oldUser._id,
         phone: oldUser.phone,
         role: oldUser.role,
       },

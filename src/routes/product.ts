@@ -19,7 +19,7 @@ import {
 } from "../controllers/ProductController";
 
 
-import { VerifyTokenAndAdmin } from "../middlewares/Authorization";
+import { VerifyTokenAndAdmin,verifyTokenAndBranchAdmin } from "../middlewares/Authorization";
 const router: Router = express.Router();
 
 

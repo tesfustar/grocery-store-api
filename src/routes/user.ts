@@ -1,6 +1,8 @@
 import express, { Router } from "express";
 import {
   GetUserProfile,
+  AddNewAddress,
+  RemoveUserAddress,
   DeActivateDeliveryOrBranchAdminManAccount,
   ActivateDeliveryOrBranchAdminAccount,
   DeleteDeliveryOrBranchAdminAccount,
@@ -28,5 +30,6 @@ router.delete(
 //user
 
 router.get("/profile/:id", GetUserProfile); //for user auth required
-
+router.put("/address/add/:id", AddNewAddress); //add new address for customers
+router.put("/address/remove/:id", RemoveUserAddress); //add new address for customers
 export default router;
