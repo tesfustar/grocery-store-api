@@ -4,6 +4,7 @@ import { IUser, IUserAddress, UserRole } from "../types/User";
 const AddressSchema = new mongoose.Schema<IUserAddress>({
   location: { type: [Number] },
   address: { type: String },
+  phone: { type: Number, unique: true },
 });
 const userSchema = new mongoose.Schema<IUser>(
   {

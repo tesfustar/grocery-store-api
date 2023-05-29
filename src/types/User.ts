@@ -10,7 +10,8 @@ export enum UserRole {
 
 export interface IUserAddress{
   address?: string;
-  location?: Number[];
+  location?: number[];
+  phone:number
 }
 export interface IUser extends Document {
   phone: number;

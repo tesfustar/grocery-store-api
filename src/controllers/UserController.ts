@@ -50,6 +50,7 @@ export const AddNewAddress = async (req: Request, res: Response) => {
   try {
     const address = z.object({
       location: z.number().array(),
+      phone:z.number()
     });
     const addressData = address.parse(req.body);
     const user = await User.findById(id);
@@ -69,6 +70,7 @@ export const AddNewAddress = async (req: Request, res: Response) => {
               address: {
                 location: addressData.location,
                 address: response?.data?.display_name,
+                phone:addressData.phone
               },
             },
           },
