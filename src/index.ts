@@ -49,6 +49,6 @@ app.use("/api/order", order);
 app.use("/api/coupon", coupon);
 app.use("/api/delivery", delivery);
 app.use("/api/productRequest", productRequest);
-// Start the server
+// Start the server on port 5000
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));
