@@ -1,7 +1,7 @@
 import User from "../models/User";
 import { Request, Response } from "express";
 import Product from "../models/Product";
-import order from "../models/Order";
+import Notification from "../models/Notification";
 import { z } from "zod";
 import Branch from "../models/Branch";
 import Store from "../models/Store";
@@ -30,6 +30,8 @@ export const MakeOrder = async (req: Request, res: Response) => {
       paymentMethod: z.nativeEnum(PaymentMethod),
     });
     const orderBody = orderSchema.parse(req.body);
+    //find the admin
+    const adminUser = await User.findOne({ role: UserRole.ADMIN });
     //first check if user is verified and exist and not banned by admin
     const user = await User.findOne({
       _id: orderBody.user,
@@ -86,9 +88,17 @@ export const MakeOrder = async (req: Request, res: Response) => {
       if (isBranchSuitable) {
         orderedBranchName = branch.name;
         //create the order in that branch
-        await Order.create({
+        const branchOrder = await Order.create({
           ...orderBody,
           branch: branch._id,
+        });
+        await Notification.create({
+          branch: branch._id,
+          order: branchOrder._id,
+          title: `You have received a new order`,
+          message: `There is new product order from ${
+            user?.firstName + user?.lastName
+          }`,
         });
         // console.log(branch);
         isOrderCreated = true;
@@ -103,7 +113,16 @@ export const MakeOrder = async (req: Request, res: Response) => {
         .json({ message: `Order created in branch ${orderedBranchName}` });
     } else {
       //make the order in the main warehouse
-      await Order.create(orderBody);
+      const mainHouseOrder = await Order.create(orderBody);
+      //send notification to admin
+      await Notification.create({
+        isAdminNotification: true,
+        order: mainHouseOrder._id,
+        title: `You have received a new order`,
+        message: `There is new product order from ${
+          user?.firstName + user?.lastName
+        }`,
+      });
       res.status(200).json({
         message: "Order created in main warehouse",
       });
@@ -155,7 +174,10 @@ export const GetDetailMainWareHouseOrder = async (
 
 //delete order
 
-export const DeleteMainWareHouseOrder:any = async (req: Request, res: Response) => {
+export const DeleteMainWareHouseOrder: any = async (
+  req: Request,
+  res: Response
+) => {
   //first check order exist or not
   const { id } = req.params;
   const order = await Order.findById(id);
@@ -285,6 +307,14 @@ export const AssignDeliveryBoy = async (req: Request, res: Response) => {
       { $set: { deliveryMan: orderBody.deliveryId } },
       { new: true }
     );
+
+    //send notification to assigned delivery man
+    await Notification.create({
+      user: orderBody.deliveryId,
+      order: id,
+      title: `Notification`,
+      message: `You have been assigned to deliver an order #${id}. Get ready to bring smiles to our customer's doorstep!`,
+    });
     res.status(200).json({ message: "success", data: assignDelivery });
   } catch (error) {
     if (error instanceof z.ZodError)

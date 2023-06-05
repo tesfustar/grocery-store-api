@@ -9,7 +9,7 @@ export const GetAllNotification = async (req: Request, res: Response) => {
       createdAt: -1,
     });
     const getUnReadNotificationCount = await Notification.find({
-      userId: req.params.id,
+      user: req.params.id,
       readAt: null,
     }).count();
     res.status(200).json({

@@ -4,6 +4,7 @@ import { z } from "zod";
 import Product from "../models/Product";
 import ProductRequest from "../models/ProductRequest";
 import Branch from "../models/Branch";
+import Notification from "../models/Notification";
 
 //request for product for main ware house store by branches
 
@@ -25,6 +26,12 @@ export const SendProductRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "the branch does not exist!" });
     //then create the request after validating user request
     const requestProduct = await ProductRequest.create(productData);
+    await Notification.create({
+      isAdminNotification: true,
+      productRequest: requestProduct._id,
+      title: `Product Request`,
+      message: `you have new product request from ${isBranchExist?.name}`,
+    });
     res.status(201).json({ message: "success", data: requestProduct });
   } catch (error) {
     if (error instanceof z.ZodError)
@@ -75,7 +82,7 @@ export const GetBranchProductRequest = async (req: Request, res: Response) => {
     if (request?.length < 1)
       return res
         .status(200)
-        .json({ message: "you didn't made  any request yet" ,data:[]});
+        .json({ message: "you didn't made  any request yet", data: [] });
     const requests = await ProductRequest.find({ branch: branchId }).populate(
       "product.product"
     );

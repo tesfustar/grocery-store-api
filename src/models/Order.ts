@@ -31,7 +31,11 @@ const OrderSchema = new mongoose.Schema<IOrder>(
       default: OrderStatus.PENDING,
       enum: Object.values(OrderStatus),
     },
-    deliveryMan: { type: mongoose.SchemaTypes.ObjectId, ref: "User" ,default:null},
+    deliveryMan: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "User",
+      default: null,
+    },
     shippingType: {
       type: String,
       default: ShippingType.FLAT,

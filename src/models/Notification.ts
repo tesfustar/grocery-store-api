@@ -7,13 +7,24 @@ const notificationSchema = new mongoose.Schema<INotification>(
     order: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "Order",
-      default:null
+      default: null,
+    },
+    productRequest: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "ProductRequest",
+      default: null,
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
+    branch: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Branch",
+      default: null,
+    },
+    isAdminNotification: { type: Boolean, default: false },
     title: { type: String },
     message: { type: String },
     readAt: { type: Date, default: null },
