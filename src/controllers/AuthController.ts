@@ -5,7 +5,11 @@ import { z } from "zod";
 import axios from "axios";
 import bcrypt from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
-
+import {
+  generateOTP,
+  generateSalt,
+  hashedOtpOrPassword,
+} from "../utils/auth.config";
 //registration endpoint
 export const SignUp = async (req: Request, res: Response) => {
   try {
@@ -13,59 +17,41 @@ export const SignUp = async (req: Request, res: Response) => {
       phone: z.number(),
     });
     const userData = userSchema.parse(req.body);
-    //check if user already exist
-
-    const userExist = await User.findOne({
+    //check user is already exist
+    let oldPhone = await User.findOne({
       phone: userData.phone,
       otpVerified: true,
       isRegistered: true,
     });
-    if (userExist)
-      return res.status(400).json({ message: "user already exist!" });
-    //check if the user try to register before
-    const unVerifiedUserExist = await User.findOne({
-      phone: userData.phone,
-      isRegistered: false,
-    });
-    var config = {
-      method: "get",
-      url: `https://api.geezsms.com/api/v1/sms/otp?token=${process.env.GEEZ_SMS_TOKEN}&phone=${req.body.phone}`,
-      headers: {},
+    if (oldPhone)
+      return res.status(400).json({ message: "phone already exist" });
+    //send sms
+    const generatedOtp = generateOTP();
+    const payload = {
+      username: "Dama70314",
+      password: `B/Y.w9.Ec:W_3Qh]Og^'D=2vfO94VB`,
+      to: userData.phone,
+      text: `Your Dama Verification code is ${generatedOtp}`,
     };
-    axios(config)
-      .then(async function (response) {
-        try {
-          const salt = await bcrypt.genSalt(10);
-          const hashedOtp = await bcrypt.hash(
-            JSON.stringify(response.data?.code),
-            salt
-          );
-
-          await Otp.create({
-            phone: userData.phone,
-            code: hashedOtp,
-          });
-          //send otp code
-          res.status(200).json({
-            message: "OTP sent to your phone",
-          });
-        } catch (error) {
-          res.status(400).json({ error: `error ${error}` });
-        }
-      })
-      .catch(function (error) {
-        res.status(403).json({ geezError: `error ${error}` });
-      });
+    const sms_otp = await axios.post(process.env.SMS_URL!, payload);
+    const hashedOtp = await hashedOtpOrPassword(generatedOtp.toString());
+    //hash and store otp
+    await Otp.create({
+      phone: userData.phone,
+      code: hashedOtp,
+    });
+    res.status(200).json({ message: "otp sent to your phone" });
   } catch (error) {
     if (error instanceof z.ZodError)
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
 //verify otp
+
 export const VerifyOtp = async (req: Request, res: Response) => {
   try {
     const otpSchema = z.object({
@@ -73,7 +59,8 @@ export const VerifyOtp = async (req: Request, res: Response) => {
       code: z.string(),
     });
     const otpData = otpSchema.parse(req.body);
-    //find the otp first
+
+    //first find the otp
     const userOtp = await Otp.findOne({
       phone: otpData.phone,
       isUsed: false,
@@ -81,12 +68,11 @@ export const VerifyOtp = async (req: Request, res: Response) => {
     }).sort({
       createdAt: -1,
     });
-    //check if the otp exist and compare with user otp
     if (!userOtp) return res.status(403).json({ message: "Invalid gateway" });
     const isOtpCorrect = await bcrypt.compare(otpData.code, userOtp.code);
+
     if (!isOtpCorrect)
       return res.status(400).json({ message: "Invalid Otp code" });
-
     let oldPhone = await User.findOne({
       phone: otpData.phone,
       otpVerified: true,
@@ -94,7 +80,7 @@ export const VerifyOtp = async (req: Request, res: Response) => {
     });
     if (!oldPhone) {
       const newUser = await User.create({
-        phone: req.body.phone,
+        phone: otpData.phone,
         otpVerified: true,
       });
       await Otp.findByIdAndUpdate(userOtp._id, { isUsed: true }, { new: true });
@@ -114,7 +100,7 @@ export const VerifyOtp = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
@@ -122,65 +108,51 @@ export const VerifyOtp = async (req: Request, res: Response) => {
 // //register user with full information
 export const RegisterUser = async (req: Request, res: Response) => {
   try {
-    const addressSchema=z.object({
-      location:z.number().array(),
-      address:z.string()
-    })
     const userSchema = z.object({
       phone: z.number(),
       email: z.string().email(),
       password: z.string().min(6),
       firstName: z.string(),
       lastName: z.string(),
-      address: addressSchema.array().optional(),
     });
     const userData = userSchema.parse(req.body);
-    // const oldUser = await User.findOne({
-    //   phone: userData.phone,
-    //   otpVerified: true,
-    // });
-    // if (!oldUser)
-    //   return res.status(400).json({ message: "you are not verified user!" });
+    const oldUser = await User.findOne({
+      phone: userData.phone,
+      otpVerified: true,
+    });
+    if (!oldUser)
+      return res.status(400).json({ message: "you are not verified user!" });
+    //check if the email is exist
+    const isEmailExist = await User.findOne({
+      email: userData.email,
+    });
+    if (isEmailExist)
+      return res.status(400).json({ message: "email already exist!" });
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
-    const address: any = await axios
-      .get(
-        // `https://maps.googleapis.com/maps/api/geocode/json?latlng=${userData.address[1]},${userData.address[0]}&key=${process.env.GOOGLE_MAP_API_KEY}`
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=9.0107&lon=38.7748`
-      )
-      .then(async (response) => {
-        // const address =
-          // response.data.results[0].address_components[2].long_name;
-        // console.log(address)
-        // const registeredUser = await User.findByIdAndUpdate(
-        //   oldUser.id,
-        //   {
-        //     $set: {
-        //       ...userData,
-        //       password: hashedPassword,
-        //       isRegistered: true,
-        //       address:response?.data?.display_name ? response?.data?.display_name : "unknown"
-        //     },
-        //   },
-        //   { new: true }
-        // );
-        const registeredUser = await User.create({
+    const registeredUser = await User.findByIdAndUpdate(
+      oldUser.id,
+      {
+        $set: {
           ...userData,
           password: hashedPassword,
           isRegistered: true,
-        })
-        const token = jwt.sign(
-          { phone: registeredUser?.phone, isAdmin: registeredUser?.role },
-          process.env.JWT_KEY as Secret,
-          {
-            expiresIn: "24h",
-          }
-        );
-        res.status(201).json({ result: registeredUser, token });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+        },
+      },
+      { new: true }
+    );
+    const token = jwt.sign(
+      {
+        _id: oldUser._id,
+        phone: oldUser.phone,
+        role: oldUser.role,
+      },
+      process.env.JWT_KEY as Secret,
+      {
+        expiresIn: "30d",
+      }
+    );
+    res.status(201).json({ result: registeredUser, token });
   } catch (error) {
     res
       .status(500)
@@ -342,46 +314,38 @@ export const ForgotPassword = async (req: Request, res: Response) => {
       phone: z.number(),
     });
     const userData = userSchema.parse(req.body);
+    //check if user is exist or not
     const oldUser = await User.findOne({
       phone: userData.phone,
+      otpVerified: true,
       isRegistered: true,
     });
     if (!oldUser) return res.status(404).json({ message: "user not found!" });
-    var config = {
-      method: "get",
-      url: `https://api.geezsms.com/api/v1/sms/otp?token=${process.env.GEEZ_SMS_TOKEN}&phone=${req.body.phone}`,
-      headers: {},
+    //send otp sms
+    const generatedOtp = generateOTP();
+    const payload = {
+      username: "Dama70314",
+      password: `B/Y.w9.Ec:W_3Qh]Og^'D=2vfO94VB`,
+      to: userData.phone,
+      text: `${generatedOtp} is your Dama password reset code`,
     };
-
-    axios(config)
-      .then(async function (response) {
-        try {
-          const salt = await bcrypt.genSalt(10);
-          const hashedOtp = await bcrypt.hash(
-            JSON.stringify(response.data?.code),
-            salt
-          );
-          await Otp.create({
-            phone: userData.phone,
-            code: hashedOtp,
-            isForForget: true,
-          });
-          res.status(200).json({
-            message: "otp sent to your phone",
-          });
-        } catch (error) {
-          res.status(400).json({ error: `error ${error}` });
-        }
-      })
-      .catch(function (error) {
-        res.status(400).json({ geezError: `error ${error}` });
-      });
+    const sms_otp = await axios.post(process.env.SMS_URL!, payload);
+    const hashedOtp = await hashedOtpOrPassword(generatedOtp.toString());
+    //hash and store otp
+    await Otp.create({
+      phone: userData.phone,
+      code: hashedOtp,
+      isForForget: true,
+    });
+    res.status(200).json({
+      message: "otp sent to your phone",
+    });
   } catch (error) {
     if (error instanceof z.ZodError)
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 
@@ -391,24 +355,31 @@ export const VerifyOtpForForgetPassword = async (
   res: Response
 ) => {
   try {
-    const otpSchema = z.object({
+    const userSchema = z.object({
       phone: z.number(),
       code: z.string(),
     });
-    const otpData = otpSchema.parse(req.body);
+    const userData = userSchema.parse(req.body);
+    //find user otp
     const userOtp = await Otp.findOne({
-      phone: otpData.phone,
+      phone: userData.phone,
       isUsed: false,
       isForForget: true,
     }).sort({
       createdAt: -1,
     });
     if (!userOtp) return res.status(403).json({ message: "Invalid gateway" });
-    const isOtpCorrect = await bcrypt.compare(otpData.code, userOtp.code);
+    //check if ot is correct
+    const isOtpCorrect = await bcrypt.compare(userData.code, userOtp.code);
+
     if (!isOtpCorrect)
       return res.status(400).json({ message: "Invalid Otp code" });
-    //then update the otp to be expired
-    await Otp.findByIdAndUpdate(userOtp._id, { isUsed: true }, { new: true });
+    //update otp
+    const updateOtp = await Otp.findByIdAndUpdate(
+      userOtp._id,
+      { isUsed: true },
+      { new: true }
+    );
     res.status(200).json({
       message: "successfully verified",
     });
@@ -417,7 +388,7 @@ export const VerifyOtpForForgetPassword = async (
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };
 

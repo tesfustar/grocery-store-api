@@ -19,6 +19,7 @@ import coupon from "./routes/coupon";
 import user from "./routes/user";
 import delivery from "./routes/delivery";
 import productRequest from "./routes/productRequest";
+import notification from "./routes/notification";
 const app: Application = express();
 
 //default middleware
@@ -49,6 +50,7 @@ app.use("/api/order", order);
 app.use("/api/coupon", coupon);
 app.use("/api/delivery", delivery);
 app.use("/api/productRequest", productRequest);
+app.use("/api/notification", notification);
 // Start the server on port 5000
 const port = process.env.PORT || 5000;
 app.listen(port, () => console.log(`Server listening on port ${port}`));

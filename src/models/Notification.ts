@@ -4,6 +4,11 @@ import { INotification } from "../types/Notification";
 
 const notificationSchema = new mongoose.Schema<INotification>(
   {
+    order: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "Order",
+      default:null
+    },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: "User",
