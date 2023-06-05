@@ -201,9 +201,10 @@ export const GetMyOrders = async (req: Request, res: Response) => {
     user: userId,
     status: OrderStatus.PENDING,
   });
-  const canceledOrders = await Order.find({
+
+  const onTheWayOrders = await Order.find({
     user: userId,
-    status: OrderStatus.CANCELED,
+    status: OrderStatus.ONGOING,
   });
   const deliveredOrders = await Order.find({
     user: userId,
@@ -213,7 +214,7 @@ export const GetMyOrders = async (req: Request, res: Response) => {
     message: "success",
     data: {
       pending: pendingOrders,
-      canceled: canceledOrders,
+      onTheWay: onTheWayOrders,
       delivered: deliveredOrders,
     },
   });
@@ -321,6 +322,39 @@ export const AssignDeliveryBoy = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: "Validation failed", errors: error.errors });
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+
+//get order detail for customer
+export const GetOrderDetailForCustomer = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findById(id)
+      .populate("products.product")
+      .populate("user");
+    if (!order) return res.status(400).json({ message: "order not found" });
+
+    if (order.inMainWareHouse) {
+      res.status(200).json({
+        message: "success",
+        data: order,
+        location: {
+          type: "Point",
+          coordinates: [38.76972185523283, 8.949270869125247],
+        },
+      });
+    } else {
+      // find branch address
+      const branch = await Branch.findOne({ branch: order.branch });
+      res.status(200).json({
+        message: "success",
+        data: order,
+        location: branch?.location,
+      });
+    }
+  } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }
 };

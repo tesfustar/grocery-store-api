@@ -296,7 +296,7 @@ export const GetOrderDetail = async (req: Request, res: Response) => {
         data: order,
         location: {
           type: "Point",
-          coordinates: [38.74720165804809, 9.022075072468796],
+          coordinates: [38.76972185523283, 8.949270869125247],
         },
       });
     } else {
