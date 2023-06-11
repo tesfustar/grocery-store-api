@@ -50,7 +50,7 @@ export const AddNewAddress = async (req: Request, res: Response) => {
   try {
     const address = z.object({
       location: z.number().array(),
-      phone:z.number()
+      phone: z.number(),
     });
     const addressData = address.parse(req.body);
     const user = await User.findById(id);
@@ -70,7 +70,7 @@ export const AddNewAddress = async (req: Request, res: Response) => {
               address: {
                 location: addressData.location,
                 address: response?.data?.display_name,
-                phone:addressData.phone
+                phone: addressData.phone,
               },
             },
           },
@@ -208,7 +208,6 @@ export const DeleteDeliveryOrBranchAdminAccount = async (
   }
 };
 
-
 //get user address
 export const GetUserAddress = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -216,10 +215,31 @@ export const GetUserAddress = async (req: Request, res: Response) => {
     //first find the user
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "user not found!" });
-  
+
     res.status(200).json({
       message: "success",
-      data:user.address,
+      data: user.address,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//update user profile
+export const UpdateUserProfile = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    //first find the user
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "user not found!" });
+    const updateProfile = await User.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true }
+    );
+    res.status(200).json({
+      message: "success",
+      data: updateProfile,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });

@@ -2,6 +2,7 @@ import express, { Router } from "express";
 import {
   CreateNewProduct,
   UpdateProduct,
+  GetSingleProductForAdmin,
   DeleteProduct,
   GetProducts,
   GetProductsForBranches, 
@@ -26,6 +27,7 @@ const router: Router = express.Router();
 //admin only
 router.post("/create",VerifyTokenAndAdmin, CreateNewProduct); //for admin only
 router.put("/find/:id",VerifyTokenAndAdmin, UpdateProduct);
+router.get("/find/:id",VerifyTokenAndAdmin, GetSingleProductForAdmin)
 router.get("/admin",VerifyTokenAndAdmin, GetProducts); //for admin admin
 router.delete("/find/remove/:id",VerifyTokenAndAdmin, DeleteProduct);
 router.put("/in-stock/:id",VerifyTokenAndAdmin, MakeProductInStock);

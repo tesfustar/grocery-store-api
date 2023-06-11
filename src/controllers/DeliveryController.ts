@@ -90,7 +90,26 @@ export const GetAllDeliveredOrder = async (req: Request, res: Response) => {
       status: OrderStatus.DELIVERED,
       deliveryMan: id,
     });
-    res.status(200).json({ message: "success", data: deliveredOrders });
+    const ordersWithLocation = await Promise.all(
+      deliveredOrders.map(async (order) => {
+        if (order.inMainWareHouse) {
+          return {
+            ...order.toObject(),
+            location: {
+              type: "Point",
+              coordinates: [38.76972185523283, 8.949270869125247],
+            },
+          };
+        } else {
+          const branch = await Branch.findOne({ branch: order.branch });
+          return {
+            ...order.toObject(),
+            location: branch?.location,
+          };
+        }
+      })
+    );
+    res.status(200).json({ message: "success", data: ordersWithLocation });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }

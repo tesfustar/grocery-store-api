@@ -210,21 +210,77 @@ export const GetMyOrders = async (req: Request, res: Response) => {
     user: userId,
     status: OrderStatus.PENDING,
   });
-
+  const pendingOrdersWithLocation = await Promise.all(
+    pendingOrders.map(async (order) => {
+      if (order.inMainWareHouse) {
+        return {
+          ...order.toObject(),
+          location: {
+            type: "Point",
+            coordinates: [38.76972185523283, 8.949270869125247],
+          },
+        };
+      } else {
+        const branch = await Branch.findOne({ branch: order.branch });
+        return {
+          ...order.toObject(),
+          location: branch?.location,
+        };
+      }
+    })
+  );
   const onTheWayOrders = await Order.find({
     user: userId,
     status: OrderStatus.ONGOING,
   });
+  const ongoingOrdersWithLocation = await Promise.all(
+    onTheWayOrders.map(async (order) => {
+      if (order.inMainWareHouse) {
+        return {
+          ...order.toObject(),
+          location: {
+            type: "Point",
+            coordinates: [38.76972185523283, 8.949270869125247],
+          },
+        };
+      } else {
+        const branch = await Branch.findOne({ branch: order.branch });
+        return {
+          ...order.toObject(),
+          location: branch?.location,
+        };
+      }
+    })
+  );
   const deliveredOrders = await Order.find({
     user: userId,
     status: OrderStatus.DELIVERED,
   });
+  const deliveredOrdersWithLocation = await Promise.all(
+    deliveredOrders.map(async (order) => {
+      if (order.inMainWareHouse) {
+        return {
+          ...order.toObject(),
+          location: {
+            type: "Point",
+            coordinates: [38.76972185523283, 8.949270869125247],
+          },
+        };
+      } else {
+        const branch = await Branch.findOne({ branch: order.branch });
+        return {
+          ...order.toObject(),
+          location: branch?.location,
+        };
+      }
+    })
+  );
   res.status(200).json({
     message: "success",
     data: {
-      pending: pendingOrders,
-      onTheWay: onTheWayOrders,
-      delivered: deliveredOrders,
+      pending: pendingOrdersWithLocation,
+      onTheWay: ongoingOrdersWithLocation,
+      delivered: deliveredOrdersWithLocation,
     },
   });
   try {
@@ -386,6 +442,34 @@ export const GetDetailBranchOrder = async (
       .populate("products.product")
       .populate("user");
     res.status(200).json({ message: "success", data: singleOrder });
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//get order status for admin
+export const GetOrderStatusForAdmin = async (
+  req: Request,
+  res: Response
+) => {
+  const date = new Date();
+  const lastYear = new Date(date.setFullYear(date.getFullYear() - 1));
+  try {
+    const orderStatus = await Order.aggregate([
+      { $match: { createdAt: { $gte: lastYear } ,inMainWareHouse: true,} },
+      {
+        $project: {
+          month: { $month: "$createdAt" },
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+    res.status(200).json({ message: "success", data: orderStatus });
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }

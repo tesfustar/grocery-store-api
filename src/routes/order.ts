@@ -9,7 +9,8 @@ import {
   UpdateMainHouseOrderStatus,
   AssignDeliveryBoy,
   GetOrderDetailForCustomer,
-  GetDetailBranchOrder
+  GetDetailBranchOrder,
+  GetOrderStatusForAdmin
 } from "../controllers/OrderController";
 
 const router: Router = express.Router();
@@ -23,4 +24,5 @@ router.get("/branch/detail/:id", GetDetailBranchOrder); //for branches branch ad
 router.get("/admin/detail/:id", GetDetailMainWareHouseOrder); //for main ware house store detail of single order
 router.delete("/admin/remove/:id", DeleteMainWareHouseOrder); //for main ware house delete order
 router.put("/admin/assign/:id", AssignDeliveryBoy); 
+router.get("/admin/order-stat", GetOrderStatusForAdmin);  //for admin
 export default router;
