@@ -5,6 +5,8 @@ import Product from "../models/Product";
 import ProductRequest from "../models/ProductRequest";
 import Branch from "../models/Branch";
 import Notification from "../models/Notification";
+import { ProductRequestStatus } from "../types/ProductRequest";
+import Store from "../models/Store";
 
 //request for product for main ware house store by branches
 
@@ -87,6 +89,55 @@ export const GetBranchProductRequest = async (req: Request, res: Response) => {
       "product.product"
     );
     res.status(200).json({ message: "success", data: requests });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+//accept product request by admin
+export const AcceptProductRequest = async (req: Request, res: Response) => {
+  const { id } = req.params; // Request id
+  try {
+    // First, find the request
+    const isRequestExist = await ProductRequest.findOne({
+      _id: id,
+      status: ProductRequestStatus.PENDING,
+    });
+    if (!isRequestExist)
+      return res.status(400).json({ message: "Request not found" });
+
+    // Iterate over each requested product and update the store's available quantity
+    for (const requestedProduct of isRequestExist.product) {
+      const store = await Store.findOne({ product: requestedProduct.product });
+      // Increase the store's available quantity by the requested product's quantity
+      if (store) {
+        store.availableQuantity =
+          (store.availableQuantity || 0) + requestedProduct.quantity;
+        await store.save();
+      } else {
+        // create the product
+        await Store.create({
+          product: requestedProduct.product,
+          branch: isRequestExist.branch,
+          availableQuantity: requestedProduct.quantity,
+        });
+      }
+    }
+    //send the notification to the branch about the request status
+    await Notification.create({
+      branch: isRequestExist.branch,
+      productRequest: id,
+      title: `Product Request accepted`,
+      message: `your product request is accepted by admin and its in the way.`,
+    });
+    //update the request
+    const updateRequest = await ProductRequest.findByIdAndUpdate(
+      id,
+      { $set: { status: ProductRequestStatus.ONGOING } },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Success", request: updateRequest });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }

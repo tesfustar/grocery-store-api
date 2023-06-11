@@ -51,7 +51,29 @@ export const GetAllPendingOrder = async (req: Request, res: Response) => {
       status: OrderStatus.PENDING,
       deliveryMan: id,
     });
-    res.status(200).json({ message: "success", data: pendingOrders });
+
+   // Iterate through the pending orders and append location
+    const ordersWithLocation = await Promise.all(
+      pendingOrders.map(async (order) => {
+        if (order.inMainWareHouse) {
+          return {
+            ...order.toObject(),
+            location: {
+              type: "Point",
+              coordinates: [38.76972185523283, 8.949270869125247],
+            },
+          };
+        } else {
+          const branch = await Branch.findOne({ branch: order.branch });
+          return {
+            ...order.toObject(),
+            location: branch?.location,
+          };
+        }
+      })
+    );
+
+    res.status(200).json({ message: "success", data: ordersWithLocation });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }
@@ -85,7 +107,28 @@ export const GetAllOngoingOrder = async (req: Request, res: Response) => {
       status: OrderStatus.ONGOING,
       deliveryMan: id,
     });
-    res.status(200).json({ message: "success", data: onTheWayOrders });
+       // Iterate through the pending orders and append location
+       const ordersWithLocation = await Promise.all(
+        onTheWayOrders.map(async (order) => {
+          if (order.inMainWareHouse) {
+            return {
+              ...order.toObject(),
+              location: {
+                type: "Point",
+                coordinates: [38.76972185523283, 8.949270869125247],
+              },
+            };
+          } else {
+            const branch = await Branch.findOne({ branch: order.branch });
+            return {
+              ...order.toObject(),
+              location: branch?.location,
+            };
+          }
+        })
+      );
+  
+    res.status(200).json({ message: "success", data: ordersWithLocation });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
   }

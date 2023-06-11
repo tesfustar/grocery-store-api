@@ -24,7 +24,7 @@ export const GetAllNotification = async (req: Request, res: Response) => {
   }
 };
 
-//get all notification
+//get all unread notification
 export const GetUnreadNotification = async (req: Request, res: Response) => {
   try {
     const getUnReadNotificationCount = await Notification.find({
@@ -73,6 +73,53 @@ export const MarkAllAsReadNotification = async (
       { new: true }
     );
     res.status(200).json({ success: true, data: updateNotification });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong please try later!", error });
+  }
+};
+
+export const GetAllAdminNotification = async (req: Request, res: Response) => {
+  try {
+    const getAllNotification = await Notification.find({
+      isAdminNotification: true,
+    }).sort({
+      createdAt: -1,
+    });
+    const getUnReadNotificationCount = await Notification.find({
+      isAdminNotification: true,
+      readAt: null,
+    }).count()
+    res.status(200).json({
+      message: "success",
+      data: getAllNotification,
+      count: getUnReadNotificationCount,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong please try later!", error });
+  }
+};
+
+export const GetAllBranchNotification = async (req: Request, res: Response) => {
+  const {id} = req.params  //branch id
+  try {
+    const getAllNotification = await Notification.find({
+      branch: id,
+    }).sort({
+      createdAt: -1,
+    });
+    const getUnReadNotificationCount = await Notification.find({
+      branch: id,
+      readAt: null,
+    }).count()
+    res.status(200).json({
+      message: "success",
+      data: getAllNotification,
+      count: getUnReadNotificationCount,
+    });
   } catch (error) {
     res
       .status(500)

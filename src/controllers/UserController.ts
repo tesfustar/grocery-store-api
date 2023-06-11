@@ -207,3 +207,21 @@ export const DeleteDeliveryOrBranchAdminAccount = async (
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
+
+
+//get user address
+export const GetUserAddress = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    //first find the user
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "user not found!" });
+  
+    res.status(200).json({
+      message: "success",
+      data:user.address,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

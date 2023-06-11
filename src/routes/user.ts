@@ -6,6 +6,7 @@ import {
   DeActivateDeliveryOrBranchAdminManAccount,
   ActivateDeliveryOrBranchAdminAccount,
   DeleteDeliveryOrBranchAdminAccount,
+  GetUserAddress
 } from "../controllers/UserController";
 import { VerifyTokenAndAdmin } from "../middlewares/Authorization";
 const router: Router = express.Router();
@@ -30,6 +31,7 @@ router.delete(
 //user
 
 router.get("/profile/:id", GetUserProfile); //for user auth required
+router.get("/address/:id", GetUserAddress);  //get own adress
 router.put("/address/add/:id", AddNewAddress); //add new address for customers
 router.put("/address/remove/:id", RemoveUserAddress); //add new address for customers
 export default router;

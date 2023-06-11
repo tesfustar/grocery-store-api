@@ -141,11 +141,20 @@ export const GetAllMainWareHouseOrders = async (
   req: Request,
   res: Response
 ) => {
+  const { status } = req.query;
   try {
-    const getAllOrders = await Order.find({ inMainWareHouse: true }).populate(
-      "user"
-    );
-    res.status(200).json({ message: "success", data: getAllOrders });
+    if (status) {
+      const getAllOrders = await Order.find({
+        inMainWareHouse: true,
+        status: status,
+      }).populate("user")
+      res.status(200).json({ message: "success", data: getAllOrders });
+    } else {
+      const getAllOrders = await Order.find({
+        inMainWareHouse: true,
+      }).populate("user");
+      res.status(200).json({ message: "success", data: getAllOrders });
+    }
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }
@@ -326,9 +335,11 @@ export const AssignDeliveryBoy = async (req: Request, res: Response) => {
   }
 };
 
-
 //get order detail for customer
-export const GetOrderDetailForCustomer = async (req: Request, res: Response) => {
+export const GetOrderDetailForCustomer = async (
+  req: Request,
+  res: Response
+) => {
   const { id } = req.params;
   try {
     const order = await Order.findById(id)
@@ -354,6 +365,27 @@ export const GetOrderDetailForCustomer = async (req: Request, res: Response) => 
         location: branch?.location,
       });
     }
+  } catch (error) {
+    res.status(500).json({ message: `Internal server error ${error}` });
+  }
+};
+
+//get order detail for branch
+export const GetDetailBranchOrder = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params;
+  try {
+    const order = await Order.findOne({ _id: id, inMainWareHouse: false });
+    if (!order) return res.status(400).json({ message: "order not found" });
+    const singleOrder = await Order.findOne({
+      _id: id,
+      inMainWareHouse: false,
+    })
+      .populate("products.product")
+      .populate("user");
+    res.status(200).json({ message: "success", data: singleOrder });
   } catch (error) {
     res.status(500).json({ message: `Internal server error ${error}` });
   }
