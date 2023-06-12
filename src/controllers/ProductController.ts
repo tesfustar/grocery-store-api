@@ -250,7 +250,7 @@ export const GetMostlyViewedProducts = async (req: Request, res: Response) => {
   }
 };
 
-//get today pick products for user no auth
+//get today pick products for user no auth featured
 export const GetTodaysPickProducts = async (req: Request, res: Response) => {
   try {
     const todayDealProducts = await Product.find({
@@ -375,5 +375,66 @@ export const GetTopSellProducts = async (req: Request, res: Response) => {
     res.status(200).json({ message: "success", data: topProductsDetails });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+//make it featured product todays deal
+export const MakeProductFeatured = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    //check first the user product or not
+    if (!product)
+      return res.status(400).json({ message: "product not found !" });
+    const isAlreadyFeatured = await Product.findOne({
+      _id: id,
+      isTodaysPick: true,
+    });
+    if (isAlreadyFeatured)
+      return res
+        .status(400)
+        .json({ message: "product is already featured !" });
+    const makeItFeatured = await Product.findByIdAndUpdate(
+      id,
+      { $set: { isTodaysPick: true } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "success",
+      data: makeItFeatured,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
+
+//remove product from featured
+export const RemoveProductFeatured = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+    //check first the user product or not
+    if (!product)
+      return res.status(400).json({ message: "product not found !" });
+    const isAlreadyNotFeatured = await Product.findOne({
+      _id: id,
+      isTodaysPick: false,
+    });
+    if (isAlreadyNotFeatured)
+      return res
+        .status(400)
+        .json({ message: "product is already not featured!" });
+    const removeFromFeatured = await Product.findByIdAndUpdate(
+      id,
+      { $set: { isTodaysPick: false } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "success",
+      data: removeFromFeatured,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
   }
 };

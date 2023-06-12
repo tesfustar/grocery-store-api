@@ -55,7 +55,7 @@ export const DeleteCategory = async (req: Request, res: Response) => {
     //then delete also all the products in that category also
     await Category.findByIdAndDelete(id);
     await Product.deleteMany({ category: id });
-    res.status(500).json({ message: "category deleted successfully!" });
+    res.status(200).json({ message: "category deleted successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
