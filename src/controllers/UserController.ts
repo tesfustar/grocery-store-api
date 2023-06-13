@@ -5,6 +5,8 @@ import _ from "lodash";
 import Order from "../models/Order";
 import z from "zod";
 import axios from "axios";
+import bcrypt from "bcryptjs";
+import { hashedOtpOrPassword } from "../utils/auth.config";
 //get user profile
 export const GetUserProfile = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -243,5 +245,46 @@ export const UpdateUserProfile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+//change password
+export const ChangePassword = async (req: Request, res: Response) => {
+  try {
+    const userSchema = z.object({
+      old_password: z.string(),
+      new_password: z.string(),
+    });
+    const userData = userSchema.parse(req.body);
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "user not found" });
+
+    //check old password
+    const isPasswordCorrect = await bcrypt.compare(
+      userData.old_password,
+      user.password
+    );
+
+    if (!isPasswordCorrect)
+      return res.status(400).json({ message: "old password not correct" });
+    const hashed = await hashedOtpOrPassword(req.body.new_password);
+    req.body.new_password = hashed;
+    await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: { password: hashed },
+      },
+      { new: true }
+    );
+    res.status(200).json({ message: "password changed successfully" });
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return res
+        .status(400)
+        .json({ message: "Validation failed", errors: error.errors });
+    res
+      .status(500)
+      .json({ message: "Something went wrong please try later!", error });
   }
 };
