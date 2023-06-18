@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import Branch from "../models/Branch";
 import Store from "../models/Store";
+import Order from "../models/Order";
+import { OrderStatus } from "../types/Order";
 //for dashboard view
 export const GetAllCountInfo = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -37,7 +39,6 @@ export const GetAllCountInfo = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
-
 
 //get all customers
 
@@ -71,6 +72,40 @@ export const GetAllDeliveries = async (req: Request, res: Response) => {
   }
 };
 
+//get delivery GetDetailAbout Delivery
+export const GetDeliveryDetail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const deliveredTotalOrders = await Order.find().countDocuments({
+      status: OrderStatus.DELIVERED,
+      deliveryMan: id,
+    });
+    const onTheTotalOrders = await Order.find().countDocuments({
+      status: OrderStatus.ONGOING,
+      deliveryMan: id,
+    });
+    const canceledTotalOrders = await Order.find().countDocuments({
+      status: OrderStatus.CANCELED,
+      deliveryMan: id,
+    });
+    const allOrders = await Order.find({ deliveryMan: id });
+    res
+      .status(200)
+      .json({
+        message: "success",
+        data: {
+          orders: allOrders,
+          counts: {
+            deliveredTotalOrders,
+            onTheTotalOrders,
+            canceledTotalOrders,
+          },
+        },
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" + error });
+  }
+};
 //create account for delivery man by default (with out phone verification)
 
 export const CreateDeliveryMan = async (req: Request, res: Response) => {
@@ -185,7 +220,9 @@ export const GetDetailAboutBranches = async (req: Request, res: Response) => {
       branch: branchId,
       role: "STORE_ADMIN",
     });
-    const productList = await Store.find({ branch: branchId }).populate("product");
+    const productList = await Store.find({ branch: branchId }).populate(
+      "product"
+    );
     const orderList = await order.find({ branch: branchId });
     const branchAdminList = await User.find({
       branch: branchId,
@@ -220,5 +257,3 @@ export const GetDetailAboutCustomer = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" + error });
   }
 };
-
-

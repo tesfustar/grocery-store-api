@@ -228,7 +228,11 @@ export const SignInForDelivery = async (req: Request, res: Response) => {
         .status(403)
         .json({ message: "You are not authorized to use this app!" });
 
-    const token = jwt.sign(
+        //check if the account is deactivated
+        const isAccountDeActivated = await User.findOne({ phone: userData.phone,isAccountHidden:true });
+        if (isAccountDeActivated)
+        return res.status(403).json({ message: "you account is suspended please contact the admin" });
+        const token = jwt.sign(
       {
         _id: oldUser._id,
         phone: oldUser.phone,
