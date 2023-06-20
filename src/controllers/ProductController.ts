@@ -218,9 +218,9 @@ export const GetSingleProduct = async (req: Request, res: Response) => {
     //increase view
     product.view++;
     //  find related products on the same product
-    const products = await Product.find({ category: product.category });
+    const products = await Product.find();
     const randomizeProducts = products
-      .filter((product) => product._id == productId)
+      .filter((product) => product._id == id)
       .map((value) => ({ value, sort: Math.random() }))
       .sort((a, b) => a.sort - b.sort)
       .map(({ value }) => value);
