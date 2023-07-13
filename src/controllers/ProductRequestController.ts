@@ -142,3 +142,38 @@ export const AcceptProductRequest = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+//mark as delivered request
+//accept product request by admin
+export const MarkAsDeliveredProductRequest = async (
+  req: Request,
+  res: Response
+) => {
+  const { id } = req.params; // Request id
+  try {
+    // First, find the request
+    const isRequestExist = await ProductRequest.findOne({
+      _id: id,
+      status: ProductRequestStatus.PENDING,
+    });
+    if (!isRequestExist)
+      return res.status(400).json({ message: "Request not found" });
+
+    await Notification.create({
+      isAdminNotification: true,
+      productRequest: id,
+      title: `Product Request`,
+      message: `product request #${id} has been delivered`,
+    });
+    //update the request
+    const updateRequest = await ProductRequest.findByIdAndUpdate(
+      id,
+      { $set: { status: ProductRequestStatus.DELIVERED } },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Success", request: updateRequest });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
