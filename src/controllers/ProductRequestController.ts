@@ -154,7 +154,7 @@ export const MarkAsDeliveredProductRequest = async (
     // First, find the request
     const isRequestExist = await ProductRequest.findOne({
       _id: id,
-      status: ProductRequestStatus.PENDING,
+      status: ProductRequestStatus.ONGOING,
     });
     if (!isRequestExist)
       return res.status(400).json({ message: "Request not found" });
