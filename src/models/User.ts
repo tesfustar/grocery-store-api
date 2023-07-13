@@ -2,9 +2,9 @@ import mongoose, { ObjectId } from "mongoose";
 import { IUser, IUserAddress, UserRole } from "../types/User";
 
 const AddressSchema = new mongoose.Schema<IUserAddress>({
-  location: { type: [Number] },
-  address: { type: String },
-  phone: { type: Number, unique: true },
+  location: { type: [Number] , required: false},
+  address: { type: String, required: false },
+  phone: { type: Number, required: false },
 });
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema<IUser>(
       default:
         "https://t3.ftcdn.net/jpg/03/46/83/96/240_F_346839683_6nAPzbhpSkIpb8pmAwufkC7c5eD7wYws.jpg",
     },
-    address: [AddressSchema],
+    address: {type:[AddressSchema],required:false,unique:false},
     otpVerified: { type: Boolean, default: false },
     isRegistered: { type: Boolean, default: false },
     isAccountHidden: { type: Boolean, default: false },

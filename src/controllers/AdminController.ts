@@ -142,6 +142,11 @@ export const CreateDeliveryMan = async (req: Request, res: Response) => {
     const createDeliveryMan = await User.create({
       ...deliveryData,
       password: hashedPassword,
+      address:{
+        phone:deliveryData.phone,
+        location:[9.070957032992531, 38.6804342290719],
+        address:"addis abeba"
+      },
       otpVerified: true,
       isRegistered: true,
     });
