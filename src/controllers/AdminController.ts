@@ -195,6 +195,11 @@ export const CreateBranchAdminMan = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(branchData.password, salt);
     const createBranchManagerAdmin = await User.create({
       ...branchData,
+      address:{
+        phone:branchData.phone,
+        location:[9.070957032992531, 38.6804342290719],
+        address:"addis abeba"
+      },
       password: hashedPassword,
       otpVerified: true,
       isRegistered: true,
