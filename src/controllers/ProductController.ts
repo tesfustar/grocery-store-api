@@ -219,18 +219,18 @@ export const GetSingleProduct = async (req: Request, res: Response) => {
     product.view++;
     //  find related products on the same product
     const products = await Product.find();
-    const randomizeProducts = products
-      .filter((product) => product._id == id)
-      .map((value) => ({ value, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ value }) => value);
+    // const randomizeProducts = products
+    //   .filter((product) => product._id == id)
+    //   .map((value) => ({ value, sort: Math.random() }))
+    //   .sort((a, b) => a.sort - b.sort)
+    //   .map(({ value }) => value);
 
     //then save the product to increase the view count
     const savedProduct = await product.save();
     res.status(200).json({
       message: "success",
       product: savedProduct,
-      relatedProducts: randomizeProducts,
+      relatedProducts: products,
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" + error });
